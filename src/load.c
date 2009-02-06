@@ -75,7 +75,12 @@ main(argc, argv)
 	/* Parse args */
 	if (argc != 9) {
 	    if (argc != 6) {
-		fprintf(stderr, "\n usage: tpcc_load [server] [DB] [user] [pass] [warehouse]\n");
+		fprintf(stderr,
+	"\n usage: tpcc_load [server] [DB] [user] [pass] [warehouse]\n"
+	"      OR\n"
+	"        tpcc_load [server] [DB] [user] [pass] [warehouse] [part] [min_wh] [max_wh]\n\n"
+	"           * [part]: 1=ITEMS 2=WAREHOUSE 3=CUSTOMER 4=ORDERS\n"
+		);
 		exit(1);
 	    }
 	}else{
@@ -363,7 +368,8 @@ LoadItems()
 			fflush(stdout);
 
 			/* EXEC SQL COMMIT WORK; */
-			if( mysql_commit(mysql) ) goto sqlerr;
+			if (!(i_id % 10000))
+				if( mysql_commit(mysql) ) goto sqlerr;
 
 			if (!(i_id % 5000))
 				printf(" %ld\n", i_id);
@@ -659,7 +665,8 @@ Stock(w_id)
 
 		if (!(s_i_id % 100)) {
 		    /*EXEC SQL COMMIT WORK; */
-		    if( mysql_commit(mysql) ) goto sqlerr;
+		    if (!(s_i_id % 10000))
+		        if( mysql_commit(mysql) ) goto sqlerr;
 
 			printf(".");
 			fflush(stdout);
@@ -944,15 +951,14 @@ Customer(d_id, w_id)
 			printf("CID = %ld, LST = %s, P# = %s\n",
 			       c_id, c_last, c_phone);
 		if (!(c_id % 100)) {
-		    /* EXEC SQL COMMIT WORK; */
-		    if( mysql_commit(mysql) ) goto sqlerr;
-
  			printf(".");
 			fflush(stdout);
 			if (!(c_id % 1000))
 				printf(" %ld\n", c_id);
 		}
 	}
+	/* EXEC SQL COMMIT WORK; */
+	if( mysql_commit(mysql) ) goto sqlerr;
 	printf("Customer Done.\n");
 
 	return;
@@ -1159,8 +1165,6 @@ Orders(d_id, w_id)
 		if (!(o_id % 100)) {
 			printf(".");
 			fflush(stdout);
-			/*EXEC SQL COMMIT WORK;*/
-			if( mysql_commit(mysql) ) goto sqlerr;
 
  			if (!(o_id % 1000))
 				printf(" %ld\n", o_id);
