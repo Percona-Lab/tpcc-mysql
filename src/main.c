@@ -72,11 +72,35 @@ int is_local = 0; /* "1" mean local */
 int valuable_flg = 0; /* "1" mean valuable ratio */
 
 
-int thread_main(int t_num);
+typedef struct
+{
+  int number;
+  int port;
+} thread_arg;
+int thread_main(thread_arg* arg);
 
 void alarm_handler(int signum);
 void alarm_dummy();
 
+inline void parse_host(char* host, const char* from)
+{
+  const char* end= index(from,':');
+  size_t length;
+  if(end == NULL)
+    length= strlen(from);
+  else
+    length= (end - from);
+  memcpy(host,from, length);
+  host[length] = '\0';
+}
+inline int parse_port(const char* from)
+{
+  const char* end= index(from,':');
+  if(end == NULL)
+    return 3306;
+  else
+    return atoi(end);
+}
 int main( int argc, char *argv[] )
 {
   int i, k, t_num, arg_offset;
@@ -86,7 +110,7 @@ int main( int argc, char *argv[] )
   timer_t timer;
   struct itimerval itval;
   struct sigaction  sigact;
-
+  int port= 3306;
   int fd, seed;
 
   printf("***************************************\n");
@@ -183,7 +207,8 @@ int main( int argc, char *argv[] )
     fprintf(stderr, "\n expecting positive number of measure_time [sec]\n");
     exit(1);
   }
-  strcpy( connect_string, argv[1] );
+  parse_host(connect_string, argv[1]);
+  port= parse_port(argv[1]);
   strcpy( db_string, argv[2] );
   strcpy( db_user, argv[3] );
   strcpy( db_password, argv[4] );
@@ -293,7 +318,10 @@ int main( int argc, char *argv[] )
   }
 
   for( t_num=0; t_num < num_conn; t_num++ ){
-    pthread_create( &t[t_num], NULL, (void *)thread_main, (void *)t_num );
+    thread_arg arg;
+    arg.number= t_num;
+    arg.port= port;
+    pthread_create( &t[t_num], NULL, (void *)thread_main, (void *)&arg );
   }
 
 
@@ -541,8 +569,10 @@ void alarm_dummy()
   }
 }
 
-int thread_main (int t_num)
+int thread_main (thread_num* arg)
 {
+  int t_num= arg->number;
+  int port= arg->port;
   int r,i;
 
   char *db_string_ptr;
@@ -558,10 +588,10 @@ int thread_main (int t_num)
 
   if(is_local==1){
     /* exec sql connect :connect_string; */
-    resp = mysql_real_connect(ctx[t_num], "localhost", db_user, db_password, db_string, 3306, NULL, 0);
+    resp = mysql_real_connect(ctx[t_num], "localhost", db_user, db_password, db_string, port, NULL, 0);
   }else{
     /* exec sql connect :connect_string USING :db_string; */
-    resp = mysql_real_connect(ctx[t_num], connect_string, db_user, db_password, db_string, 3306, NULL, 0);
+    resp = mysql_real_connect(ctx[t_num], connect_string, db_user, db_password, db_string, port, NULL, 0);
   }
 
   if(resp) {
