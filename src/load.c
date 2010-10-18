@@ -60,7 +60,7 @@ inline int parse_port(const char* from)
   if(end == NULL)
     return 3306;
   else
-    return atoi(from);
+    return atoi(end);
 }
 /*
  * ==================================================================+ |
