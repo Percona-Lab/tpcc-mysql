@@ -43,6 +43,25 @@ int             is_local = 1;           /* "1" mean local */
 
 #define DB_STRING_MAX 51
 
+inline void parse_host(char* host, const char* from)
+{
+  const char* end= index(from,':');
+  size_t length;
+  if(end == NULL)
+    length= strlen(from);
+  else
+    length= (end - from);
+  memcpy(host,from, length);
+  host[length] = '\0';
+}
+inline int parse_port(const char* from)
+{
+  const char* end= index(from,':');
+  if(end == NULL)
+    return 3306;
+  else
+    return atoi(from);
+}
 /*
  * ==================================================================+ |
  * main() | ARGUMENTS |      Warehouses n [Debug] [Help]
@@ -60,6 +79,7 @@ main(argc, argv)
 	char           db_string[DB_STRING_MAX];
 	char	       db_user[DB_STRING_MAX];
 	char	       db_password[DB_STRING_MAX];
+        int            port= 3306;
 
 	int i;
 
@@ -107,7 +127,8 @@ main(argc, argv)
 	    fprintf(stderr, "\n expecting positive number of warehouses\n");
 	    exit(1);
 	}
-	strcpy( connect_string, argv[1] );
+        parse_host(connect_string, argv[1]);
+        port= parse_port(argv[1]);
 	strcpy( db_string, argv[2] );
 	strcpy( db_user, argv[3] );
 	strcpy( db_password, argv[4] );
@@ -168,10 +189,10 @@ main(argc, argv)
 
 	if(is_local==1){
 	    /* exec sql connect :connect_string; */
-	    resp = mysql_real_connect(mysql, "localhost", db_user, db_password, db_string, 3306, NULL, 0);
+	    resp = mysql_real_connect(mysql, "localhost", db_user, db_password, db_string, port, NULL, 0);
 	}else{
 	    /* exec sql connect :connect_string USING :db_string; */
-	    resp = mysql_real_connect(mysql, connect_string, db_user, db_password, db_string, 3306, NULL, 0);
+	    resp = mysql_real_connect(mysql, connect_string, db_user, db_password, db_string, port, NULL, 0);
 	}
 
 	if(resp) {
