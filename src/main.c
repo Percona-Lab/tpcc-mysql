@@ -569,7 +569,7 @@ void alarm_dummy()
   }
 }
 
-int thread_main (thread_num* arg)
+int thread_main (thread_arg* arg)
 {
   int t_num= arg->number;
   int port= arg->port;
