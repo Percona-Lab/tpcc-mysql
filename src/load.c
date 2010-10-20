@@ -110,6 +110,7 @@ main(argc, argv)
 	    fprintf(stderr, "\n expecting positive number of warehouses\n");
 	    exit(1);
 	}
+        //strcpy(connect_string, argv[1]);
         parse_host(connect_string, argv[1]);
         port= parse_port(argv[1]);
 	strcpy( db_string, argv[2] );
@@ -133,6 +134,7 @@ main(argc, argv)
 
 	printf("<Parameters>\n");
 	if(is_local==0)printf("     [server]: %s\n", connect_string);
+	if(is_local==0)printf("     [port]: %d\n", port);
 	printf("     [DBname]: %s\n", db_string);
 	printf("       [user]: %s\n", db_user);
 	printf("       [pass]: %s\n", db_password);

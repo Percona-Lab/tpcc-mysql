@@ -1,28 +1,28 @@
 inline void parse_host(char* host, const char* from)
 {
-  const char* end= index(from,':');
+  const char* port= rindex(from,':');
   size_t length;
-  if(end == NULL)
+  if(NULL == port)
     length= strlen(from);
   else
-    length= (end - from);
+    length= (port - from);
   memcpy(host,from, length);
   host[length] = '\0';
 }
 inline int parse_port(const char* from)
 {
-  const char* port= index(from,':');
+  const char* port= rindex(from,':');
   if(NULL == port)
     return 3306;
   else
   {
-    const char* end= port;
-    int result= strtol(port,&end,10);
-    if( (0 <= result) && (result <= 0xFFFF) )
+    const char* end= NULL;
+    int result= strtol(port+1,&end,10);
+    if( (0 == *end) && (0 <= result) && (result <= 0xFFFF) )
       return result;
     else
     {
-      printf(stderr,"Incorrect port value: %d\n",result);
+      printf(stderr,"Incorrect port value: %s\n",end);
       exit(-1);
     }
   }

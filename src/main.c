@@ -77,7 +77,7 @@ typedef struct
   int number;
   int port;
 } thread_arg;
-int thread_main(thread_arg* arg);
+int thread_main(thread_arg*);
 
 void alarm_handler(int signum);
 void alarm_dummy();
@@ -90,6 +90,7 @@ int main( int argc, char *argv[] )
   long j;
   float f;
   pthread_t *t;
+  thread_arg *thd_arg;
   timer_t timer;
   struct itimerval itval;
   struct sigaction  sigact;
@@ -190,6 +191,7 @@ int main( int argc, char *argv[] )
     fprintf(stderr, "\n expecting positive number of measure_time [sec]\n");
     exit(1);
   }
+  //strcpy(connect_string, argv[1]);
   parse_host(connect_string, argv[1]);
   port= parse_port(argv[1]);
   strcpy( db_string, argv[2] );
@@ -222,6 +224,7 @@ int main( int argc, char *argv[] )
 
   printf("<Parameters>\n");
   if(is_local==0)printf("     [server]: %s\n", connect_string);
+  if(is_local==0)printf("     [port]: %d\n", port);
   printf("     [DBname]: %s\n", db_string);
   printf("       [user]: %s\n", db_user);
   printf("       [pass]: %s\n", db_password);
@@ -281,6 +284,11 @@ int main( int argc, char *argv[] )
     fprintf(stderr, "error at malloc(pthread_t)\n");
     exit(1);
   }
+  thd_arg = malloc( sizeof(thread_arg) * num_conn );
+  if( thd_arg == NULL ){
+    fprintf(stderr, "error at malloc(thread_arg)\n");
+    exit(1);
+  }
 
   ctx = malloc( sizeof(MYSQL *) * num_conn );
   stmt = malloc( sizeof(MYSQL_STMT **) * num_conn );
@@ -301,10 +309,9 @@ int main( int argc, char *argv[] )
   }
 
   for( t_num=0; t_num < num_conn; t_num++ ){
-    thread_arg arg;
-    arg.number= t_num;
-    arg.port= port;
-    pthread_create( &t[t_num], NULL, (void *)thread_main, (void *)&arg );
+    thd_arg[t_num].port= port;
+    thd_arg[t_num].number= t_num;
+    pthread_create( &t[t_num], NULL, (void *)thread_main, (void *)&(thd_arg[t_num]) );
   }
 
 
@@ -363,6 +370,7 @@ int main( int argc, char *argv[] )
   free(stmt);
 
   free(t);
+  free(thd_arg);
 
   hist_report();
 
