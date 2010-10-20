@@ -82,25 +82,8 @@ int thread_main(thread_arg* arg);
 void alarm_handler(int signum);
 void alarm_dummy();
 
-inline void parse_host(char* host, const char* from)
-{
-  const char* end= index(from,':');
-  size_t length;
-  if(end == NULL)
-    length= strlen(from);
-  else
-    length= (end - from);
-  memcpy(host,from, length);
-  host[length] = '\0';
-}
-inline int parse_port(const char* from)
-{
-  const char* end= index(from,':');
-  if(end == NULL)
-    return 3306;
-  else
-    return atoi(end);
-}
+#include "parse_port.h"
+
 int main( int argc, char *argv[] )
 {
   int i, k, t_num, arg_offset;

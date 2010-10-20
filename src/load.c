@@ -43,25 +43,8 @@ int             is_local = 1;           /* "1" mean local */
 
 #define DB_STRING_MAX 51
 
-inline void parse_host(char* host, const char* from)
-{
-  const char* end= index(from,':');
-  size_t length;
-  if(end == NULL)
-    length= strlen(from);
-  else
-    length= (end - from);
-  memcpy(host,from, length);
-  host[length] = '\0';
-}
-inline int parse_port(const char* from)
-{
-  const char* end= index(from,':');
-  if(end == NULL)
-    return 3306;
-  else
-    return atoi(end);
-}
+#include "parse_port.h"
+
 /*
  * ==================================================================+ |
  * main() | ARGUMENTS |      Warehouses n [Debug] [Help]
