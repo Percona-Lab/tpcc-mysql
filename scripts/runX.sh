@@ -13,8 +13,8 @@ ulimit -c unlimited
 BD=/mnt/fio160/back/tpc1000w
 #DR=/data/db/bench
 DR="/mnt/tachion/tpc1000w"
+#CONFIG="/etc/my.y.cnf"
 CONFIG="/etc/my.y.cnf"
-#CONFIG="/etc/my.y.557.cnf"
 
 WT=10
 RT=10800
@@ -34,11 +34,11 @@ rm -f $log2/ib_log*
 
 echo $log2
 #for nm in ibdata1 ib_logfile0 ib_logfile1
-for nm in ibdata1 
-do
-rm -f $log2/$nm
-pagecache-management.sh cp $BD/$nm $log2
-done
+#for nm in ibdata1 
+#do
+#rm -f $log2/$nm
+#pagecache-management.sh cp $BD/$nm $log2
+#done
 
 
 cp -r $BD/mysql $DR
@@ -92,19 +92,24 @@ mkdir -p $OUTDIR
 RUN_NUMBER=`expr $RUN_NUMBER + 1`
 echo $RUN_NUMBER > .run_number
 
+for trxv in 2
+do
+for logsz in 4G
+do
 #for par in  1 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 43
 #for par in  13 26 39 52 65 78
 #for par in 39 52 65 78
 #for par in 13 52 78 144
-for par in 52 144
+for par in 13 52 144
 do
+
+runid="par$par.log$logsz.trx$trxv."
 
 restore
 
 export OS_FILE_LOG_BLOCK_SIZE=4096
-#/home/yasufumi/opt/mysql-5.5.6_p/bin/mysqld --defaults-file=$CONFIG --datadir=$DR  --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB &
-/usr/local/mysql/libexec/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB &
-#/usr/local/mysql/bin/mysqld --defaults-file=$CONFIG --datadir=$DR  --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-buffer-pool-instances=8 &
+#/usr/local/mysql/libexec/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$DR --innodb_log_group_home_dir=$DR --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
+/usr/local/mysql/libexec/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
 
 MYSQLPID=$!
 
@@ -128,20 +133,20 @@ set -e
 
 
 
-iostat -dx 5 2000 >> $OUTDIR/iostat.${par}res &
+iostat -dmx 10 2000 >> $OUTDIR/iostat.${runid}res &
 PID=$!
-vmstat 5 2000 >> $OUTDIR/vmstat.${par}res &
+vmstat 10 2000 >> $OUTDIR/vmstat.${runid}res &
 PIDV=$!
-./virident_stat.sh >> $OUTDIR/virident.${par}res &
+./virident_stat.sh >> $OUTDIR/virident.${runid}res &
 PIDVS=$!
-$MYSQLDIR/bin/mysqladmin ext -i10 -r >> $OUTDIR/mysqladminext.${par}res &
+$MYSQLDIR/bin/mysqladmin ext -i10 -r >> $OUTDIR/mysqladminext.${runid}res &
 PIDMYSQLSTAT=$!
 
 
 cp $CONFIG $OUTDIR
 cp $0 $OUTDIR
 mysqladmin variables >>  $OUTDIR/mysql_variables.res
-./tpcc_start localhost tpcc1000 root "" 1000 24 10 3600 | tee -a $OUTDIR/tpcc.${par}.out
+./tpcc_start localhost tpcc1000 root "" 1000 32 10 3600 | tee -a $OUTDIR/tpcc.${runid}.out
 kill $PIDMYSQLSTAT
 kill -9 $PID
 kill -9 $PIDV
@@ -154,4 +159,7 @@ kill -9 $MYSQLPID
 #mysqladmin  shutdown
 
 
+done
+
+done
 done
