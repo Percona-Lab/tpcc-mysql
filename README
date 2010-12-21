@@ -1,0 +1,23 @@
+1. Build binaries
+   * cd scr ; make
+   ( you should have mysql_config available in $PATH)
+
+2. Load data
+   * create database
+     mysqladmin create tpcc1000
+   * create tables
+     mysql tpcc1000 < create_table.sql
+   * create indexes and FK ( this step can be done after loading data)
+     mysql tpcc1000 < add_fkey_idx.sql
+   * populate data
+     - simple step
+       tpcc_load localhost tpcc1000 root "" 1000
+                 |hostname| |dbname| |user| |password| |WAREHOUSES|
+     - load data in parallel 
+       check load.sh script
+
+3. start benchmark
+   * tpcc_start localhost tpcc1000 root "" 1000 32 10 10800
+                |hostname| |dbname| |user| |password| |WAREHOUSES| |CONNECTIONS| |WARMUP TIME| |BENCHMARK TIME|
+
+                
