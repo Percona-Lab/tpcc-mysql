@@ -12,7 +12,7 @@ w_city varchar(20),
 w_state char(2), 
 w_zip char(9), 
 w_tax decimal(4,2), 
-w_ytd decimal(12,2) ) TYPE=InnoDB;
+w_ytd decimal(12,2) ) Engine=InnoDB;
 
 drop table if exists district;
 
@@ -27,7 +27,7 @@ d_state char(2),
 d_zip char(9), 
 d_tax decimal(4,2), 
 d_ytd decimal(12,2), 
-d_next_o_id int ) TYPE=InnoDB;
+d_next_o_id int ) Engine=InnoDB;
 
 drop table if exists customer;
 
@@ -52,7 +52,7 @@ c_balance decimal(12,2),
 c_ytd_payment decimal(12,2), 
 c_payment_cnt smallint, 
 c_delivery_cnt smallint, 
-c_data text ) TYPE=InnoDB;
+c_data text ) Engine=InnoDB;
 
 drop table if exists history;
 
@@ -64,14 +64,14 @@ h_d_id tinyint,
 h_w_id smallint,
 h_date datetime,
 h_amount decimal(6,2), 
-h_data varchar(24) ) TYPE=InnoDB;
+h_data varchar(24) ) Engine=InnoDB;
 
 drop table if exists new_orders;
 
 create table new_orders (
 no_o_id int not null,
 no_d_id tinyint not null,
-no_w_id smallint not null) TYPE=InnoDB;
+no_w_id smallint not null) Engine=InnoDB;
 
 drop table if exists orders;
 
@@ -83,7 +83,7 @@ o_c_id int,
 o_entry_d datetime,
 o_carrier_id tinyint,
 o_ol_cnt tinyint, 
-o_all_local tinyint ) TYPE=InnoDB;
+o_all_local tinyint ) Engine=InnoDB;
 
 drop table if exists order_line;
 
@@ -97,7 +97,7 @@ ol_supply_w_id smallint,
 ol_delivery_d datetime, 
 ol_quantity tinyint, 
 ol_amount decimal(6,2), 
-ol_dist_info char(24) ) TYPE=InnoDB;
+ol_dist_info char(24) ) Engine=InnoDB;
 
 drop table if exists item;
 
@@ -106,7 +106,7 @@ i_id int not null,
 i_im_id int, 
 i_name varchar(24), 
 i_price decimal(5,2), 
-i_data varchar(50) ) TYPE=InnoDB;
+i_data varchar(50) ) Engine=InnoDB;
 
 drop table if exists stock;
 
@@ -127,7 +127,7 @@ s_dist_10 char(24),
 s_ytd decimal(8,0), 
 s_order_cnt smallint, 
 s_remote_cnt smallint,
-s_data varchar(50) ) TYPE=InnoDB;
+s_data varchar(50) ) Engine=InnoDB;
 
 ALTER TABLE warehouse ADD CONSTRAINT pkey_warehouse PRIMARY KEY(w_id);
 ALTER TABLE district  ADD CONSTRAINT pkey_district  PRIMARY KEY(d_w_id, d_id);
