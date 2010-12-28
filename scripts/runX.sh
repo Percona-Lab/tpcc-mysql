@@ -12,10 +12,10 @@ ulimit -c unlimited
 #DR="/mnt/fio320"
 BD=/mnt/fio160/back/tpc1000w
 #DR=/data/db/bench
-DR="/data/tpc1000w"
-#DR="/mnt/tachion/tpc1000w"
-CONFIG="/etc/my.y.cnf"
-#CONFIG="/etc/my.y.558.cnf"
+#DR="/data/tpc1000w"
+DR="/mnt/tachion/tpc1000w"
+#CONFIG="/etc/my.y.cnf"
+CONFIG="/etc/my.y.558.cnf"
 
 WT=10
 RT=10800
@@ -42,8 +42,13 @@ echo $log2
 #done
 
 
-cp -r $BD/mysql $DR
-pagecache-management.sh cp -r $BD/tpcc1000 $DR
+for files in $BD/* 
+do
+if [ -d $files ]; then
+pagecache-management.sh cp -r $files $DR
+fi
+done
+
 pagecache-management.sh cp -r $BD/ibdata1 $log2
 
 sync
@@ -101,16 +106,14 @@ do
 #for par in  13 26 39 52 65 78
 #for par in 39 52 65 78
 #for par in 13 52 78 144
-for par in 13 52 144
+for par in 52 144
 do
 
 runid="par$par.log$logsz.trx$trxv."
 
 restore
 
-export OS_FILE_LOG_BLOCK_SIZE=4096
-#/usr/local/mysql/bin/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$DR --innodb_log_group_home_dir=$DR --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
-/usr/local/mysql/libexec/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
+/usr/local/mysql/bin/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
 
 MYSQLPID=$!
 
@@ -149,7 +152,7 @@ PIDINN=$!
 cp $CONFIG $OUTDIR
 cp $0 $OUTDIR
 mysqladmin variables >>  $OUTDIR/mysql_variables.res
-./tpcc_start localhost tpcc1000 root "" 1000 32 10 10800 | tee -a $OUTDIR/tpcc.${runid}.out
+./tpcc_start localhost tpcc1000 root "" 1000 32 10 3600 | tee -a $OUTDIR/tpcc.${runid}.out
 kill $PIDMYSQLSTAT
 kill -9 $PID
 kill -9 $PIDV
