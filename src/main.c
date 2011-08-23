@@ -1,5 +1,5 @@
 /*
- * main.pc 
+ * main.pc
  * driver for the tpcc transactions
  */
 
@@ -24,9 +24,12 @@
 MYSQL **ctx;
 MYSQL_STMT ***stmt;
 
-#define DB_STRING_MAX 51
+#define DB_STRING_MAX 128
+#define MAX_CLUSTER_SIZE 128
 
-char connect_string[DB_STRING_MAX];
+char *connect_strings[MAX_CLUSTER_SIZE];
+int count_connect_strings = 0;
+
 char db_string[DB_STRING_MAX];
 char db_user[DB_STRING_MAX];
 char db_password[DB_STRING_MAX];
@@ -82,6 +85,31 @@ int thread_main(thread_arg*);
 void alarm_handler(int signum);
 void alarm_dummy();
 
+int
+parse_host_get_port(int *port, char *arg)
+{
+    *port = 3306;
+    int s = 0, e = 0;
+    while (1) {
+        if (arg[e] == ',' || arg[e] == ' ' || arg[e] == ':' || arg[e] == '\0') {
+          if (e == s) return -1;
+          connect_strings[count_connect_strings] = (char *)malloc(e - s + 1);
+          memcpy(connect_strings[count_connect_strings], &arg[s], e - s);
+          connect_strings[count_connect_strings][e - s] = 0;
+          count_connect_strings++;
+          s = e + 1;
+          if (arg[e] == ':') {
+            *port = atoi(&arg[s]);
+            break;
+          } else if (arg[e] == '\0') {
+            break;
+          }
+        }
+        e++;
+    }
+    return 0;
+}
+
 #include "parse_port.h"
 
 int main( int argc, char *argv[] )
@@ -123,7 +151,6 @@ int main( int argc, char *argv[] )
   num_conn = 10;
   lampup_time = 10;
   measure_time = 20;
-  strcpy( connect_string, "tpcc/tpcc" );
   strcpy( db_string, "tpcc" );
 
   /* number of node (default 0) */
@@ -153,7 +180,7 @@ int main( int argc, char *argv[] )
   if ((num_node == 0)&&(argc == 14)) { /* hidden mode */
     valuable_flg = 1;
   }
-      
+
   if ((num_node == 0)&&(valuable_flg == 0)&&(argc != 9)) {
     fprintf(stderr, "\n usage: tpcc_start [server] [DB] [user] [pass] [warehouse] [connection] [rampup] [measure]\n");
     exit(1);
@@ -191,9 +218,11 @@ int main( int argc, char *argv[] )
     fprintf(stderr, "\n expecting positive number of measure_time [sec]\n");
     exit(1);
   }
-  //strcpy(connect_string, argv[1]);
-  parse_host(connect_string, argv[1]);
-  port= parse_port(argv[1]);
+
+  if (parse_host_get_port(&port, argv[1]) < 0) {
+      fprintf(stderr, "cannot prase the host: %s\n", argv[1]);
+      exit(1);
+  }
   strcpy( db_string, argv[2] );
   strcpy( db_user, argv[3] );
   strcpy( db_password, argv[4] );
@@ -223,7 +252,13 @@ int main( int argc, char *argv[] )
   }
 
   printf("<Parameters>\n");
-  if(is_local==0)printf("     [server]: %s\n", connect_string);
+  if(is_local==0) {
+    printf("     [server]: ");
+    for (i = 0; i < count_connect_strings; i++) {
+      printf("%s%s", i ? ", " : "", connect_strings[i]);
+    }
+    printf("\n");
+  }
   if(is_local==0)printf("     [port]: %d\n", port);
   printf("     [DBname]: %s\n", db_string);
   printf("       [user]: %s\n", db_user);
@@ -469,7 +504,7 @@ int main( int argc, char *argv[] )
   }
 
   printf("\n<TpmC>\n");
-  f = (float)(success[0] + late[0]) * 60.0 
+  f = (float)(success[0] + late[0]) * 60.0
     / (float)((measure_time / PRINT_INTERVAL) * PRINT_INTERVAL);
   printf("                 %.3f TpmC\n",f);
   exit(0);
@@ -565,6 +600,7 @@ int thread_main (thread_arg* arg)
   int t_num= arg->number;
   int port= arg->port;
   int r,i;
+  char *connect_string = connect_strings[t_num % count_connect_strings];
 
   char *db_string_ptr;
   MYSQL* resp;

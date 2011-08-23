@@ -45,6 +45,17 @@ int             is_local = 1;           /* "1" mean local */
 
 #include "parse_port.h"
 
+int
+try_stmt_execute(MYSQL_STMT *mysql_stmt)
+{
+    int ret = mysql_stmt_execute(mysql_stmt);
+    if (ret) {
+        printf("\n%d, %s, %s\n", mysql_errno(mysql), mysql_sqlstate(mysql), mysql_error(mysql) );
+        mysql_rollback(mysql);
+    }
+    return ret;
+}
+
 /*
  * ==================================================================+ |
  * main() | ARGUMENTS |      Warehouses n [Debug] [Help]
@@ -272,7 +283,6 @@ main(argc, argv)
 	printf("\n...DATA LOADING COMPLETED SUCCESSFULLY.\n");
 	exit(0);
 Error_SqlCall_close:
-	mysql_close(mysql);
 Error_SqlCall:
 	Error(0);
 }
@@ -297,6 +307,7 @@ LoadItems()
 	int             orig[MAXITEMS+1];
 	int             pos;
 	int             i;
+    int             retried = 0;
 
 	MYSQL_BIND    param[5];
 
@@ -312,6 +323,10 @@ LoadItems()
 		} while (orig[pos]);
 		orig[pos] = 1;
 	}
+retry:
+    if (retried)
+        printf("Retrying ...\n");
+    retried = 1;
 	for (i_id = 1; i_id <= MAXITEMS; i_id++) {
 
 		/* Generate Item Data */
@@ -362,7 +377,7 @@ LoadItems()
 		param[4].buffer = i_data;
 		param[4].buffer_length = strlen(i_data);
 		if( mysql_stmt_bind_param(stmt[0], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[0]) ) goto sqlerr;
+		if( try_stmt_execute(stmt[0]) ) goto retry;
 
 #if 0
 		printf("done executing sql\n");
@@ -372,10 +387,6 @@ LoadItems()
 		if (!(i_id % 100)) {
 			printf(".");
 			fflush(stdout);
-
-			/* EXEC SQL COMMIT WORK; */
-			if (!(i_id % 10000))
-				if( mysql_commit(mysql) ) goto sqlerr;
 
 			if (!(i_id % 5000))
 				printf(" %ld\n", i_id);
@@ -412,13 +423,19 @@ LoadWare()
 	float           w_ytd;
 
 	int             tmp;
+    int             retried = 0;
 
 	MYSQL_BIND    param[9];
 
 	/* EXEC SQL WHENEVER SQLERROR GOTO sqlerr; */
 
 	printf("Loading Warehouse \n");
-	for (w_id = min_ware; w_id <= max_ware; w_id++) {
+    w_id = min_ware;
+retry:
+    if (retried)
+        printf("Retrying ....\n");
+    retried = 1;
+	for (; w_id <= max_ware; w_id++) {
 
 		/* Generate Warehouse Data */
 
@@ -465,11 +482,11 @@ LoadWare()
 		param[8].buffer_type = MYSQL_TYPE_FLOAT;
 		param[8].buffer = &w_ytd;
 		if( mysql_stmt_bind_param(stmt[1], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[1]) ) goto sqlerr;
+		if( try_stmt_execute(stmt[1]) ) goto retry;
 
 		/** Make Rows associated with Warehouse **/
-		Stock(w_id);
-		District(w_id);
+		if( Stock(w_id) ) goto retry;
+		if( District(w_id) ) goto retry;
 
 		/* EXEC SQL COMMIT WORK; */
 		if( mysql_commit(mysql) ) goto sqlerr;
@@ -543,7 +560,7 @@ sqlerr:
  * ARGUMENTS |      w_id - warehouse id
  * +==================================================================
  */
-void 
+int 
 Stock(w_id)
 	int             w_id;
 {
@@ -568,6 +585,7 @@ Stock(w_id)
 	int             orig[MAXITEMS+1];
 	int             pos;
 	int             i;
+    int             error;
 
 	MYSQL_BIND    param[14];
 
@@ -584,6 +602,7 @@ Stock(w_id)
 		orig[pos] = 1;
 	}
 
+retry:
 	for (s_i_id = 1; s_i_id <= MAXITEMS; s_i_id++) {
 
 		/* Generate Stock Data */
@@ -663,30 +682,25 @@ Stock(w_id)
 		param[13].buffer = s_data;
 		param[13].buffer_length = strlen(s_data);
 		if( mysql_stmt_bind_param(stmt[2], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[2]) ) goto sqlerr;
+		if( (error = try_stmt_execute(stmt[2])) ) goto out;
 
 		if (option_debug)
 			printf("SID = %ld, WID = %ld, Quan = %ld\n",
 			       s_i_id, s_w_id, s_quantity);
 
 		if (!(s_i_id % 100)) {
-		    /*EXEC SQL COMMIT WORK; */
-		    if (!(s_i_id % 10000))
-		        if( mysql_commit(mysql) ) goto sqlerr;
-
 			printf(".");
 			fflush(stdout);
 			if (!(s_i_id % 5000))
 				printf(" %ld\n", s_i_id);
 		}
 	}
-	/*EXEC SQL COMMIT WORK;*/
-	if( mysql_commit(mysql) ) goto sqlerr;
 
 	printf(" Stock Done.\n");
-	return;
+out:
+	return error;
 sqlerr:
-	Error(0);
+    Error(0);
 }
 
 /*
@@ -695,7 +709,7 @@ sqlerr:
  * | ARGUMENTS |      w_id - warehouse id
  * +==================================================================
  */
-void 
+int 
 District(w_id)
 	int             w_id;
 {
@@ -713,6 +727,7 @@ District(w_id)
 	float           d_tax;
 	float           d_ytd;
 	int             d_next_o_id;
+    int             error;
 
 	MYSQL_BIND    param[11];
 
@@ -722,6 +737,7 @@ District(w_id)
 	d_w_id = w_id;
 	d_ytd = 30000.0;
 	d_next_o_id = 3001L;
+retry:
 	for (d_id = 1; d_id <= DIST_PER_WARE; d_id++) {
 
 		/* Generate District Data */
@@ -767,17 +783,16 @@ District(w_id)
 		param[10].buffer_type = MYSQL_TYPE_LONG;
 		param[10].buffer = &d_next_o_id;
 		if( mysql_stmt_bind_param(stmt[3], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[3]) ) goto sqlerr;
+		if( (error = try_stmt_execute(stmt[3])) ) goto out;
 
 		if (option_debug)
 			printf("DID = %ld, WID = %ld, Name = %10s, Tax = %5.2f\n",
 			       d_id, d_w_id, d_name, d_tax);
 
 	}
-	/*EXEC SQL COMMIT WORK;*/
-	if( mysql_commit(mysql) ) goto sqlerr;
 
-	return;
+out:
+	return error;
 sqlerr:
 	Error(0);
 }
@@ -818,6 +833,7 @@ Customer(d_id, w_id)
 	float           h_amount;
 
 	char            h_data[25];
+    int             retried = 0;
 
 	MYSQL_BIND    param[18];
 
@@ -825,6 +841,10 @@ Customer(d_id, w_id)
 
 	printf("Loading Customer for DID=%ld, WID=%ld\n", d_id, w_id);
 
+retry:
+    if (retried)
+        printf("Retrying ...\n");
+    retried = 1;
 	for (c_id = 1; c_id <= CUST_PER_DIST; c_id++) {
 
 		/* Generate Customer Data */
@@ -919,7 +939,7 @@ Customer(d_id, w_id)
 		param[17].buffer = c_data;
 		param[17].buffer_length = strlen(c_data);
 		if( mysql_stmt_bind_param(stmt[4], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[4]) ) goto sqlerr;
+		if( try_stmt_execute(stmt[4]) ) goto retry;
 
 		h_amount = 10.0;
 
@@ -951,7 +971,7 @@ Customer(d_id, w_id)
 		param[7].buffer = h_data;
 		param[7].buffer_length = strlen(h_data);
 		if( mysql_stmt_bind_param(stmt[5], param) ) goto sqlerr;
-		if( mysql_stmt_execute(stmt[5]) ) goto sqlerr;
+		if( try_stmt_execute(stmt[5]) ) goto retry;
 
 		if (option_debug)
 			printf("CID = %ld, LST = %s, P# = %s\n",
@@ -999,6 +1019,7 @@ Orders(d_id, w_id)
 	float           i_price;
 	float           c_discount;
 	float           tmp_float;
+    int             retried = 0;
 
 	MYSQL_BIND    param[10];
 
@@ -1007,6 +1028,10 @@ Orders(d_id, w_id)
 	printf("Loading Orders for D=%ld, W= %ld\n", d_id, w_id);
 	o_d_id = d_id;
 	o_w_id = w_id;
+retry:
+    if (retried)
+        printf("Retrying ...\n");
+    retried = 1;
 	InitPermutation();	/* initialize permutation of customer numbers */
 	for (o_id = 1; o_id <= ORD_PER_DIST; o_id++) {
 
@@ -1038,7 +1063,7 @@ Orders(d_id, w_id)
 		    param[5].buffer_type = MYSQL_TYPE_LONG;
 		    param[5].buffer = &o_ol_cnt;
 		    if( mysql_stmt_bind_param(stmt[6], param) ) goto sqlerr;
-		    if( mysql_stmt_execute(stmt[6]) ) goto sqlerr;
+		    if( try_stmt_execute(stmt[6]) ) goto retry;
 
 		    /*EXEC SQL INSERT INTO
 			                new_orders
@@ -1052,7 +1077,7 @@ Orders(d_id, w_id)
 		    param[2].buffer_type = MYSQL_TYPE_LONG;
 		    param[2].buffer = &o_w_id;
 		    if( mysql_stmt_bind_param(stmt[7], param) ) goto sqlerr;
-		    if( mysql_stmt_execute(stmt[7]) ) goto sqlerr;
+		    if( try_stmt_execute(stmt[7]) ) goto retry;
 
 		} else {
 		    /*EXEC SQL INSERT INTO
@@ -1078,7 +1103,7 @@ Orders(d_id, w_id)
 		    param[6].buffer_type = MYSQL_TYPE_LONG;
 		    param[6].buffer = &o_ol_cnt;
 		    if( mysql_stmt_bind_param(stmt[8], param) ) goto sqlerr;
-		    if( mysql_stmt_execute(stmt[8]) ) goto sqlerr;
+		    if( try_stmt_execute(stmt[8]) ) goto retry;
 
 		}
 
@@ -1126,7 +1151,7 @@ Orders(d_id, w_id)
 			    param[8].buffer = ol_dist_info;
 			    param[8].buffer_length = strlen(ol_dist_info);
 			    if( mysql_stmt_bind_param(stmt[9], param) ) goto sqlerr;
-			    if( mysql_stmt_execute(stmt[9]) ) goto sqlerr;
+			    if( try_stmt_execute(stmt[9]) ) goto retry;
 
 			} else {
 			    /*EXEC SQL INSERT INTO
@@ -1160,7 +1185,7 @@ Orders(d_id, w_id)
 			    param[9].buffer = ol_dist_info;
 			    param[9].buffer_length = strlen(ol_dist_info);
 			    if( mysql_stmt_bind_param(stmt[10], param) ) goto sqlerr;
-			    if( mysql_stmt_execute(stmt[10]) ) goto sqlerr;
+			    if( try_stmt_execute(stmt[10]) ) goto retry;
 			}
 
 			if (option_debug)
