@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 #define MAXREC      320
-#define REC_PER_SEC 5
+#define REC_PER_SEC 100
 
 extern float max_rt[];
 extern long clk_tck;

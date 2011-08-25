@@ -530,7 +530,7 @@ void alarm_handler(int signum)
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f\n",
+  printf("%4d, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 ( l[0] - prev_l[0] ),
@@ -569,7 +569,7 @@ void alarm_dummy()
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f, %d(%d):%.1f\n",
+  printf("%4d, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 ( l[0] - prev_l[0] ),
