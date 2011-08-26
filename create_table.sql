@@ -55,7 +55,7 @@ c_ytd_payment decimal(12,2),
 c_payment_cnt smallint, 
 c_delivery_cnt smallint, 
 c_data text,
-PRIMARY KEY(c_w_id, c_d_id, c_id) ) Engine=InnoDB slices=288;
+PRIMARY KEY(c_w_id, c_d_id, c_id) ) Engine=InnoDB;
 
 drop table if exists history;
 
@@ -67,7 +67,7 @@ h_d_id tinyint,
 h_w_id smallint,
 h_date datetime,
 h_amount decimal(6,2), 
-h_data varchar(24) ) Engine=InnoDB slices=24;
+h_data varchar(24) ) Engine=InnoDB;
 
 drop table if exists new_orders;
 
@@ -88,7 +88,7 @@ o_entry_d datetime,
 o_carrier_id tinyint,
 o_ol_cnt tinyint, 
 o_all_local tinyint,
-PRIMARY KEY(o_w_id, o_d_id, o_id) ) Engine=InnoDB slices=12;
+PRIMARY KEY(o_w_id, o_d_id, o_id) ) Engine=InnoDB ;
 
 drop table if exists order_line;
 
@@ -103,7 +103,7 @@ ol_delivery_d datetime,
 ol_quantity tinyint, 
 ol_amount decimal(6,2), 
 ol_dist_info char(24),
-PRIMARY KEY(ol_w_id, ol_d_id, ol_o_id, ol_number) ) Engine=InnoDB slices=512;
+PRIMARY KEY(ol_w_id, ol_d_id, ol_o_id, ol_number) ) Engine=InnoDB ;
 
 drop table if exists item;
 
@@ -135,7 +135,7 @@ s_ytd decimal(8,0),
 s_order_cnt smallint, 
 s_remote_cnt smallint,
 s_data varchar(50),
-PRIMARY KEY(s_w_id, s_i_id) ) Engine=InnoDB slices=480;
+PRIMARY KEY(s_w_id, s_i_id) ) Engine=InnoDB ;
 
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
