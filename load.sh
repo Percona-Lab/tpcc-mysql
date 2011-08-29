@@ -1,8 +1,8 @@
 export LD_LIBRARY_PATH=/usr/local/mysql/lib/mysql/
 DBNAME=$1
 WH=$2
-HOST=cluster
-STEP=100
+HOST=localhost
+STEP=1000
 
 ./tpcc_load $HOST $DBNAME root "" $WH 1 1 $WH >> 1.out &
 
