@@ -5,16 +5,16 @@ set -e
 
 #export LD_LIBRARY_PATH=/usr/local/mysql/lib/mysql/
 export LD_LIBRARY_PATH=/usr/local/Percona-Server/lib/mysql/
-MYSQLDIR=/usr/local/mysql
+MYSQLDIR=/usr/local/mysql-5.5.15-linux2.6-x86_64
 
 ulimit -c unlimited
 
 #DR="/mnt/fio320"
-BD=/mlc/back/tpc1000w/
+BD=/data/bench/back/tpc/tpc
 #DR=/data/db/bench
-DR="/tachion/data"
+DR="/data/bench/test"
 #DR="/mnt/tachion/tpc1000w"
-CONFIG="/etc/my.y.cnf"
+CONFIG="/etc/my.van.cnf"
 #CONFIG="/etc/my.y.558.cnf"
 
 WT=10
@@ -23,8 +23,8 @@ RT=10800
 ROWS=80000000
 
 #log2="/tachion/system/"
-log2="/data/bench/"
-#log2="$DR/"
+#log2="/data/bench/"
+log2="$DR/"
 
 # restore from backup
 function restore {
@@ -46,8 +46,8 @@ echo $log2
 
 
 cp -r $BD/mysql $DR
-pagecache-management.sh cp -r $BD/tpcc1000 $DR
-pagecache-management.sh cp -r $BD/ibdata1 $log2
+cp -r $BD/tpcc $DR
+cp -r $BD/ibdata1 $log2
 
 sync
 echo 3 > /proc/sys/vm/drop_caches
@@ -102,24 +102,21 @@ echo $RUN_NUMBER > .run_number
 
 for trxv in 2
 do
-for logsz in 4G
+for logsz in 1950M
 do
 #for par in  1 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 43
 #for par in  13 26 39 52 65 78
-#for par in 39 52 65 78
+for par in `seq 5 10 55`
 #for par in 13 52 78 144
-for par in 13 52 144
+#for par in 1 2 4 8 16 32 64
 do
 
 runid="par$par.log$logsz.trx$trxv."
 
 restore
 
-sysctl -w dev.flashcache.dirty_thresh_pct=90
 
-export OS_FILE_LOG_BLOCK_SIZE=4096
-#/usr/local/mysql/bin/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$DR --innodb_log_group_home_dir=$DR --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
-/usr/local/mysql/bin/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv  &
+$MYSQLDIR/bin/mysqld --defaults-file=$CONFIG --datadir=$DR --innodb_data_home_dir=$log2 --innodb_log_group_home_dir=$log2 --innodb_thread_concurrency=0 --innodb-buffer-pool-size=${par}GB --innodb-log-file-size=$logsz --innodb_flush_log_at_trx_commit=$trxv --log-error=$OUTDIR/mysql.error.log &
 
 MYSQLPID=$!
 
@@ -140,20 +137,13 @@ echo -n "."
 done
 set -e
 
-
-fio-status -a /dev/fioa >>$OUTDIR/fiostatus.${runid}res
-
-iostat -mxt 1 >> $OUTDIR/iostat.${runid}res &
+iostat -mxt 10 $(($RT/10+1)) >> $OUTDIR/iostat.${runid}res &
 PID=$!
-vmstat 10 2000 >> $OUTDIR/vmstat.${runid}res &
+vmstat 10  $(($RT/10+1)) >> $OUTDIR/vmstat.${runid}res &
 PIDV=$!
-./virident_stat.sh >> $OUTDIR/virident.${runid}res &
-PIDVS=$!
-./flashcache_stat.sh >> $OUTDIR/flashcache.${runid}res &
-PIDFC=$!
-$MYSQLDIR/bin/mysqladmin ext -i10 -r >> $OUTDIR/mysqladminext.${runid}res &
+$MYSQLDIR/bin/mysqladmin ext -i10  >> $OUTDIR/mysqladminext.${runid}res &
 PIDMYSQLSTAT=$!
-./innodb_stat.sh >> $OUTDIR/innodb.${runid}res &
+./innodb_stat.sh $RT  >> $OUTDIR/innodb.${runid}res &
 PIDINN=$!
 
 
@@ -161,14 +151,15 @@ cp $CONFIG $OUTDIR
 cp $0 $OUTDIR
 mysqladmin variables >>  $OUTDIR/mysql_variables.res
 sysctl -a >> $OUTDIR/sysctl.res
-./tpcc_start localhost tpcc1000 root "" 1000 32 10 10800 | tee -a $OUTDIR/tpcc.${runid}.out
-kill $PIDMYSQLSTAT
-kill -9 $PID
-kill -9 $PIDV
-kill -9 $PIDVS
-kill -9 $PIDFC
-kill -9 $MYSQLPID
+./tpcc_start localhost tpcc root "" 1000 32 10 $RT | tee -a $OUTDIR/tpcc.${runid}.out
+
+set +e
 kill -9 $PIDINN
+kill -9 $PIDMYSQLSTAT
+kill -9 `pidof mysqld`
+set -e
+
+
 
 
 done
