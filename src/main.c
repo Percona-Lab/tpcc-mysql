@@ -521,7 +521,7 @@ void alarm_handler(int signum)
 {
   int i;
   int s[5],l[5];
-  float rt90[5];
+  double rt90[5];
 
   for( i=0; i<5; i++ ){
     s[i] = success[i];
@@ -530,7 +530,7 @@ void alarm_handler(int signum)
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f, %d(%d):%.2f\n",
+  printf("%4d, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 ( l[0] - prev_l[0] ),

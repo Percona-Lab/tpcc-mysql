@@ -6,11 +6,10 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#define MAXREC      320
-#define REC_PER_SEC 100
+#define MAXREC      20
+#define REC_PER_SEC 1000
 
-extern float max_rt[];
-extern long clk_tck;
+extern double max_rt[];
 
 int total_hist[5][MAXREC * REC_PER_SEC];
 int cur_hist[5][MAXREC * REC_PER_SEC];
@@ -28,19 +27,20 @@ void hist_init()
 }
 
 /* incliment matched one */
-void hist_inc( int transaction, time_t rtclk )
+void hist_inc( int transaction, double rtclk )
 {
   int i;
 
-  i = ( rtclk * REC_PER_SEC )/clk_tck;
+  i = ( rtclk * (double)REC_PER_SEC );
   if(i >= (MAXREC * REC_PER_SEC)){
     i = (MAXREC * REC_PER_SEC) - 1;
   }
   ++cur_hist[transaction][i];
+  //printf("In: %.3f, trx: %d, Added %d\n", rtclk, transaction, i);
 }
 
 /* check point, add on total histgram, return 90% line */
-float hist_ckp( int transaction )
+double hist_ckp( int transaction )
 {
   int i;
   int total,tmp,line;
@@ -54,11 +54,12 @@ float hist_ckp( int transaction )
     tmp += cur_hist[transaction][i];
     total_hist[transaction][i] += cur_hist[transaction][i];
     cur_hist[transaction][i] = 0;
-    if( (tmp * 10) <= total ){
+    if( (tmp * 5) <= total ){
       line = i;
     }
   }
-  return ( (float)(line)/(float)(REC_PER_SEC) );
+  //printf("CKP: trx: %d line: %d total: %d tmp: %d ret: %.3f\n",  transaction, line, total, tmp,(double)(line)/(double)(REC_PER_SEC));
+  return ( (double)(line)/(double)(REC_PER_SEC) );
 }
 
 void hist_report()
@@ -100,7 +101,7 @@ void hist_report()
       printf("\n5.Stock-Level\n\n");
     }
     for( i=0; (i<(MAXREC * REC_PER_SEC))&&(i <= line[j]*4); i++){
-      printf("%3.2f, %6d\n",(float)(i+1)/(float)(REC_PER_SEC),total_hist[j][i]);
+      printf("%3.2f, %6d\n",(double)(i+1)/(double)(REC_PER_SEC),total_hist[j][i]);
     }
     printf("\n");
   }
@@ -123,7 +124,7 @@ void hist_report()
     case 4:
       printf(" Stock-Level : ");
     }
-    printf("%3.2f  (%.2f)\n",(float)(line[j])/(float)(REC_PER_SEC),max_rt[j]);
+    printf("%3.2f  (%.2f)\n",(double)(line[j])/(double)(REC_PER_SEC),max_rt[j]);
   }
 
 }

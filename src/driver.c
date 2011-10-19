@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/times.h>
+#include <time.h>
 #include "tpc.h"      /* prototypes for misc. functions */
 #include "trans_if.h" /* prototypes for transacation interface calls */
 #include "sequence.h"
@@ -35,7 +36,7 @@ extern int* late2[];
 extern int* retry2[];
 extern int* failure2[];
 
-extern float max_rt[];
+extern double max_rt[];
 
 extern long clk_tck;
 
@@ -88,8 +89,9 @@ static int do_neword (int t_num)
     int c_num;
     int i,ret;
     clock_t clk1,clk2;
-    float rt;
-    struct tms tbuf;
+    double rt;
+    struct timespec tbuf1;
+    struct timespec tbuf2;
     int  w_id, d_id, c_id, ol_cnt;
     int  all_local = 1;
     int  notfound = MAXITEMS+1;  /* valid item ids are numbered consecutively
@@ -128,18 +130,20 @@ static int do_neword (int t_num)
     }
 
     for (i = 0; i < MAX_RETRY; i++) {
-      clk1 = times( &tbuf );
+      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
       ret = neword(t_num, w_id, d_id, c_id, ol_cnt, all_local, itemid, supware, qty);
-      clk2 = times( &tbuf );
+      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
 
       if(ret){
 
-	rt = (float)(clk2 - clk1)/(float)clk_tck;
+	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
+        //printf("NOT : %.3f\n", rt);
+
 	if(rt > max_rt[0])
 	  max_rt[0]=rt;
-	hist_inc(0, clk2 - clk1);
+	hist_inc(0, rt);
 	if(counting_on){
-	  if( (clk2 - clk1) / clk_tck < RTIME_NEWORD ){
+	  if( rt < RTIME_NEWORD ){
 	    success[0]++;
 	    success2[0][t_num]++;
 	  }else{
@@ -190,8 +194,9 @@ static int do_payment (int t_num)
     int c_num;
     int byname,i,ret;
     clock_t clk1,clk2;
-    float rt;
-    struct tms tbuf;
+    double rt;
+    struct timespec tbuf1;
+    struct timespec tbuf2;
     int  w_id, d_id, c_w_id, c_d_id, c_id, h_amount;
     char c_last[17];
 
@@ -220,18 +225,18 @@ static int do_payment (int t_num)
     }
 
     for (i = 0; i < MAX_RETRY; i++) {
-      clk1 = times( &tbuf );
+      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
       ret = payment(t_num, w_id, d_id, byname, c_w_id, c_d_id, c_id, c_last, h_amount);
-      clk2 = times( &tbuf );
+      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
 
       if(ret){
 
-	rt = (float)(clk2 - clk1)/(float)clk_tck;
+	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[1])
 	  max_rt[1]=rt;
-	hist_inc(1, clk2 - clk1);
+	hist_inc(1, rt);
 	if(counting_on){
-	  if( (clk2 - clk1) / clk_tck < RTIME_PAYMENT ){
+	  if( rt < RTIME_PAYMENT ){
 	    success[1]++;
 	    success2[1][t_num]++;
 	  }else{
@@ -269,8 +274,9 @@ static int do_ordstat (int t_num)
     int c_num;
     int byname,i,ret;
     clock_t clk1,clk2;
-    float rt;
-    struct tms tbuf;
+    double rt;
+    struct timespec tbuf1;
+    struct timespec tbuf2;
     int  w_id, d_id, c_id;
     char c_last[16];
 
@@ -291,18 +297,18 @@ static int do_ordstat (int t_num)
     }
 
     for (i = 0; i < MAX_RETRY; i++) {
-      clk1 = times( &tbuf );
+      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
       ret = ordstat(t_num, w_id, d_id, byname, c_id, c_last);
-      clk2 = times( &tbuf );
+      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
 
       if(ret){
 
-	rt = (float)(clk2 - clk1)/(float)clk_tck;
+	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[2])
 	  max_rt[2]=rt;
-	hist_inc(2, clk2 - clk1);
+	hist_inc(2, rt);
 	if(counting_on){
-	  if( (clk2 - clk1) / clk_tck < RTIME_ORDSTAT ){
+	  if( rt < RTIME_ORDSTAT ){
 	    success[2]++;
 	    success2[2][t_num]++;
 	  }else{
@@ -341,8 +347,9 @@ static int do_delivery (int t_num)
     int c_num;
     int i,ret;
     clock_t clk1,clk2;
-    float rt;
-    struct tms tbuf;
+    double rt;
+    struct timespec tbuf1;
+    struct timespec tbuf2;
     int  w_id, o_carrier_id;
 
     if(num_node==0){
@@ -355,18 +362,18 @@ static int do_delivery (int t_num)
     o_carrier_id = RandomNumber(1, 10);
 
     for (i = 0; i < MAX_RETRY; i++) {
-      clk1 = times( &tbuf );
+      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
       ret = delivery(t_num, w_id, o_carrier_id);
-      clk2 = times( &tbuf );
+      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
 
       if(ret){
 
-	rt = (float)(clk2 - clk1)/(float)clk_tck;
+	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[3])
 	  max_rt[3]=rt;
-	hist_inc(3, clk2 - clk1);
+	hist_inc(3, rt );
 	if(counting_on){
-	  if( (clk2 - clk1) / clk_tck < RTIME_DELIVERY ){
+	  if( rt < RTIME_DELIVERY ){
 	    success[3]++;
 	    success2[3][t_num]++;
 	  }else{
@@ -405,8 +412,9 @@ static int do_slev (int t_num)
     int c_num;
     int i,ret;
     clock_t clk1,clk2;
-    float rt;
-    struct tms tbuf;
+    double rt;
+    struct timespec tbuf1;
+    struct timespec tbuf2;
     int  w_id, d_id, level;
 
     if(num_node==0){
@@ -420,18 +428,18 @@ static int do_slev (int t_num)
     level = RandomNumber(10, 20); 
 
     for (i = 0; i < MAX_RETRY; i++) {
-      clk1 = times( &tbuf );
+      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
       ret = slev(t_num, w_id, d_id, level);
-      clk2 = times( &tbuf );
+      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
 
       if(ret){
 
-	rt = (float)(clk2 - clk1)/(float)clk_tck;
+	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[4])
 	  max_rt[4]=rt;
-	hist_inc(4, clk2 - clk1);
+	hist_inc(4, rt );
 	if(counting_on){
-	  if( (clk2 - clk1) / clk_tck < RTIME_SLEV ){
+	  if( rt < RTIME_SLEV ){
 	    success[4]++;
 	    success2[4][t_num]++;
 	  }else{
