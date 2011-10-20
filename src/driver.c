@@ -25,6 +25,8 @@ extern int activate_transaction;
 extern int counting_on;
 
 extern int num_node;
+extern int time_count;
+extern FILE *freport_file;
 
 extern int success[];
 extern int late[];
@@ -138,6 +140,9 @@ static int do_neword (int t_num)
 
 	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
         //printf("NOT : %.3f\n", rt);
+        if (freport_file != NULL) {
+          fprintf(freport_file,"%d %.3f\n", time_count, rt);
+        }
 
 	if(rt > max_rt[0])
 	  max_rt[0]=rt;

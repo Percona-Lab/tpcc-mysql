@@ -33,6 +33,8 @@ char db_string[DB_STRING_MAX];
 char db_host[DB_STRING_MAX];
 char db_user[DB_STRING_MAX];
 char db_password[DB_STRING_MAX];
+char report_file[DB_STRING_MAX]="";
+FILE *freport_file=NULL;
 
 int num_ware;
 int num_conn;
@@ -44,7 +46,7 @@ int num_node; /* number of servers that consists of cluster i.e. RAC (0:normal m
 char node_string[NUM_NODE_MAX][DB_STRING_MAX];
 
 int time_count;
-#define PRINT_INTERVAL 10
+int PRINT_INTERVAL=10;
 
 int success[5];
 int late[5];
@@ -131,27 +133,12 @@ int main( int argc, char *argv[] )
   num_node = 0;
   arg_offset = 0;
 
-  /* alarm initialize */
-  time_count = 0;
-  itval.it_interval.tv_sec = PRINT_INTERVAL;
-  itval.it_interval.tv_usec = 0;
-  itval.it_value.tv_sec = PRINT_INTERVAL;
-  itval.it_value.tv_usec = 0;
-  sigact.sa_handler = alarm_handler;
-  sigact.sa_flags = 0;
-  sigemptyset(&sigact.sa_mask);
-
-  /* setup handler&timer */
-  if( sigaction( SIGALRM, &sigact, NULL ) == -1 ) {
-    fprintf(stderr, "error in sigaction()\n");
-    exit(1);
-  }
 
   clk_tck = sysconf(_SC_CLK_TCK);
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -169,6 +156,10 @@ int main( int argc, char *argv[] )
             printf ("option p with value '%s'\n", optarg);
             strncpy(db_password, optarg, DB_STRING_MAX);
             break;
+        case 'f':
+            printf ("option f with value '%s'\n", optarg);
+            strncpy(report_file, optarg, DB_STRING_MAX);
+            break;
         case 'w':
             printf ("option w with value '%s'\n", optarg);
             num_ware = atoi(optarg);
@@ -185,13 +176,17 @@ int main( int argc, char *argv[] )
             printf ("option l with value '%s'\n", optarg);
             measure_time = atoi(optarg);
             break;
+        case 'i':
+            printf ("option i with value '%s'\n", optarg);
+            PRINT_INTERVAL = atoi(optarg);
+            break;
         case 'P':
             printf ("option P with value '%s'\n", optarg);
             port = atoi(optarg);
             break;
         case '?':
-    	    printf("\n usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time\n");
-            break;
+    	    printf("Usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file\n");
+            exit(0);
         default:
             printf ("?? getopt returned character code 0%o ??\n", c);
         }
@@ -280,6 +275,11 @@ int main( int argc, char *argv[] )
     }
   }
 
+  if ( strlen(report_file) > 0 ) {
+    freport_file=fopen(report_file,"w+");
+  }
+
+
   printf("<Parameters>\n");
   if(is_local==0) {
     printf("     [server]: ");
@@ -299,6 +299,22 @@ int main( int argc, char *argv[] )
   if(valuable_flg==1){
     printf("      [ratio]: %d:%d:%d:%d:%d\n", atoi(argv[9 + arg_offset]), atoi(argv[10 + arg_offset]),
 	   atoi(argv[11 + arg_offset]), atoi(argv[12 + arg_offset]), atoi(argv[13 + arg_offset]) );
+  }
+
+  /* alarm initialize */
+  time_count = 0;
+  itval.it_interval.tv_sec = PRINT_INTERVAL;
+  itval.it_interval.tv_usec = 0;
+  itval.it_value.tv_sec = PRINT_INTERVAL;
+  itval.it_value.tv_usec = 0;
+  sigact.sa_handler = alarm_handler;
+  sigact.sa_flags = 0;
+  sigemptyset(&sigact.sa_mask);
+
+  /* setup handler&timer */
+  if( sigaction( SIGALRM, &sigact, NULL ) == -1 ) {
+    fprintf(stderr, "error in sigaction()\n");
+    exit(1);
   }
 
   fd = open("/dev/urandom", O_RDONLY);
@@ -435,6 +451,7 @@ int main( int argc, char *argv[] )
   free(thd_arg);
 
   //hist_report();
+  fclose(freport_file);
 
   printf("\n<Raw Results>\n");
   for ( i=0; i<5; i++ ){
