@@ -54,7 +54,7 @@ double hist_ckp( int transaction )
     tmp += cur_hist[transaction][i];
     total_hist[transaction][i] += cur_hist[transaction][i];
     cur_hist[transaction][i] = 0;
-    if( (tmp * 5) <= total ){
+    if( tmp  <= (total*95/100) ){
       line = i;
     }
   }
