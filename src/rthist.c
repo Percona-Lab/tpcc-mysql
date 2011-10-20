@@ -43,19 +43,20 @@ void hist_inc( int transaction, double rtclk )
 double hist_ckp( int transaction )
 {
   int i;
-  int total,tmp,line;
+  int total,tmp,line,line_set;
 
-  total = tmp = 0;
+  total = tmp = line_set = 0;
   line = MAXREC * REC_PER_SEC;
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
     total += cur_hist[transaction][i]*i;
   }
-  for( i=(MAXREC * REC_PER_SEC)-1; i >= 0 ; i--){
+  for( i=0; i<(MAXREC * REC_PER_SEC); i++){
     tmp += cur_hist[transaction][i]*i;
     total_hist[transaction][i] += cur_hist[transaction][i];
     cur_hist[transaction][i] = 0;
-    if( tmp  <= (total*95/100) ){
+    if (( tmp  >= (total*95/100) ) && (line_set ==0)){
       line = i;
+      line_set=1;
     }
   }
   //printf("CKP: trx: %d line: %d total: %d tmp: %d ret: %.3f\n",  transaction, line, total, tmp,(double)(line)/(double)(REC_PER_SEC));
