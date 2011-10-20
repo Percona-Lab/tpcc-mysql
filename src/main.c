@@ -27,10 +27,10 @@ MYSQL_STMT ***stmt;
 #define DB_STRING_MAX 128
 #define MAX_CLUSTER_SIZE 128
 
-char *connect_strings[MAX_CLUSTER_SIZE];
-int count_connect_strings = 0;
+char connect_string[DB_STRING_MAX];
 
 char db_string[DB_STRING_MAX];
+char db_host[DB_STRING_MAX];
 char db_user[DB_STRING_MAX];
 char db_password[DB_STRING_MAX];
 
@@ -85,36 +85,10 @@ int thread_main(thread_arg*);
 void alarm_handler(int signum);
 void alarm_dummy();
 
-int
-parse_host_get_port(int *port, char *arg)
-{
-    *port = 3306;
-    int s = 0, e = 0;
-    while (1) {
-        if (arg[e] == ',' || arg[e] == ' ' || arg[e] == ':' || arg[e] == '\0') {
-          if (e == s) return -1;
-          connect_strings[count_connect_strings] = (char *)malloc(e - s + 1);
-          memcpy(connect_strings[count_connect_strings], &arg[s], e - s);
-          connect_strings[count_connect_strings][e - s] = 0;
-          count_connect_strings++;
-          s = e + 1;
-          if (arg[e] == ':') {
-            *port = atoi(&arg[s]);
-            break;
-          } else if (arg[e] == '\0') {
-            break;
-          }
-        }
-        e++;
-    }
-    return 0;
-}
-
-#include "parse_port.h"
 
 int main( int argc, char *argv[] )
 {
-  int i, k, t_num, arg_offset;
+  int i, k, t_num, arg_offset, c;
   long j;
   float f;
   pthread_t *t;
@@ -177,7 +151,60 @@ int main( int argc, char *argv[] )
 
   /* Parse args */
 
-  if ((num_node == 0)&&(argc == 14)) { /* hidden mode */
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:")) != -1) {
+        switch (c) {
+        case 'h':
+            printf ("option h with value '%s'\n", optarg);
+            strncpy(connect_string, optarg, DB_STRING_MAX);
+            break;
+        case 'd':
+            printf ("option d with value '%s'\n", optarg);
+            strncpy(db_string, optarg, DB_STRING_MAX);
+            break;
+        case 'u':
+            printf ("option u with value '%s'\n", optarg);
+            strncpy(db_user, optarg, DB_STRING_MAX);
+            break;
+        case 'p':
+            printf ("option p with value '%s'\n", optarg);
+            strncpy(db_password, optarg, DB_STRING_MAX);
+            break;
+        case 'w':
+            printf ("option w with value '%s'\n", optarg);
+            num_ware = atoi(optarg);
+            break;
+        case 'c':
+            printf ("option c with value '%s'\n", optarg);
+            num_conn = atoi(optarg);
+            break;
+        case 'r':
+            printf ("option r with value '%s'\n", optarg);
+            lampup_time = atoi(optarg);
+            break;
+        case 'l':
+            printf ("option l with value '%s'\n", optarg);
+            measure_time = atoi(optarg);
+            break;
+        case 'P':
+            printf ("option P with value '%s'\n", optarg);
+            port = atoi(optarg);
+            break;
+        case '?':
+    	    printf("\n usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time\n");
+            break;
+        default:
+            printf ("?? getopt returned character code 0%o ??\n", c);
+        }
+    }
+    if (optind < argc) {
+        printf ("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf ("%s ", argv[optind++]);
+        printf ("\n");
+    }
+
+/*
+  if ((num_node == 0)&&(argc == 14)) { 
     valuable_flg = 1;
   }
 
@@ -226,6 +253,8 @@ int main( int argc, char *argv[] )
   strcpy( db_string, argv[2] );
   strcpy( db_user, argv[3] );
   strcpy( db_password, argv[4] );
+*/
+
   if(strcmp(db_string,"l")==0){
     is_local = 1;
   }else{
@@ -254,9 +283,7 @@ int main( int argc, char *argv[] )
   printf("<Parameters>\n");
   if(is_local==0) {
     printf("     [server]: ");
-    for (i = 0; i < count_connect_strings; i++) {
-      printf("%s%s", i ? ", " : "", connect_strings[i]);
-    }
+      printf("%s",  connect_string);
     printf("\n");
   }
   if(is_local==0)printf("     [port]: %d\n", port);
@@ -407,7 +434,7 @@ int main( int argc, char *argv[] )
   free(t);
   free(thd_arg);
 
-  hist_report();
+  //hist_report();
 
   printf("\n<Raw Results>\n");
   for ( i=0; i<5; i++ ){
@@ -600,7 +627,6 @@ int thread_main (thread_arg* arg)
   int t_num= arg->number;
   int port= arg->port;
   int r,i;
-  char *connect_string = connect_strings[t_num % count_connect_strings];
 
   char *db_string_ptr;
   MYSQL* resp;
