@@ -4,7 +4,7 @@
 
 
 
-LIBS=		`mysql_config --libs_r`
+LIBS=		`mysql_config --libs_r` -lrt
 
 INC=		-I. `mysql_config --include`
 
