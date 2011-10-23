@@ -325,7 +325,7 @@ done:
 	return (1);
 
 sqlerr:
-        printf("ordstat %d:%d\n",t_num,proceed);
+        fprintf(stderr, "ordstat %d:%d\n",t_num,proceed);
 	error(ctx[t_num],mysql_stmt);
         /*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/

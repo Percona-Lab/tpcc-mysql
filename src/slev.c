@@ -172,7 +172,7 @@ done:
 	return (1);
 
 sqlerr:
-        printf("slev\n");
+        fprintf(stderr,"slev\n");
 	error(ctx[t_num],mysql_stmt);
         /*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/
@@ -181,7 +181,7 @@ sqlerrerr:
 	return (0);
 
 sqlerr2:
-        printf("slev\n");
+        fprintf(stderr,"slev\n");
 	error(ctx[t_num],mysql_stmt2);
         /*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/

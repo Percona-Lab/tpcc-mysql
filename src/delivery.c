@@ -228,7 +228,7 @@ int delivery( int t_num,
 	return (1);
 
 sqlerr:
-        printf("delivery %d:%d\n",t_num,proceed);
+        fprintf(stderr, "delivery %d:%d\n",t_num,proceed);
 	error(ctx[t_num],mysql_stmt);
         /*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/

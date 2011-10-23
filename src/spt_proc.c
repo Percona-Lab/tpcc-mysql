@@ -22,7 +22,7 @@ int error(
 	}
 */
 	if(mysql){
-	    printf("%d, %s, %s\n", mysql_errno(mysql), mysql_sqlstate(mysql), mysql_error(mysql) );
+	    fprintf(stderr, "%d, %s, %s\n", mysql_errno(mysql), mysql_sqlstate(mysql), mysql_error(mysql) );
 	}
 	return (0);
 }

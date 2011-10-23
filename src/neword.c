@@ -508,7 +508,7 @@ invaliditem:
 	return (1); /* OK? */
 
 sqlerr:
-	printf("neword %d:%d\n",t_num,proceed);
+	fprintf(stderr,"neword %d:%d\n",t_num,proceed);
       	error(ctx[t_num],mysql_stmt);
 	/*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/

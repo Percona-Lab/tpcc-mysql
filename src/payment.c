@@ -522,7 +522,7 @@ int payment( int t_num,
 	return (1);
 
 sqlerr:
-        printf("payment %d:%d\n",t_num,proceed);
+        fprintf(stderr, "payment %d:%d\n",t_num,proceed);
 	error(ctx[t_num],mysql_stmt);
         /*EXEC SQL WHENEVER SQLERROR GOTO sqlerrerr;*/
 	/*EXEC_SQL ROLLBACK WORK;*/
