@@ -50,12 +50,12 @@ double hist_ckp( int transaction )
   total = tmp = line_set = 0;
   line = MAXREC * REC_PER_SEC;
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
-    //total += cur_hist[transaction][i]*i;
-    total += i;
+    total += cur_hist[transaction][i];
+    //total += i;
   }
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
-    //tmp += cur_hist[transaction][i]*i;
-    tmp += i;
+    tmp += cur_hist[transaction][i];
+    //tmp += i;
     total_hist[transaction][i] += cur_hist[transaction][i];
     cur_hist[transaction][i] = 0;
     if (( tmp  >= (total*99/100) ) && (line_set ==0)){
