@@ -36,6 +36,7 @@ void hist_inc( int transaction, double rtclk )
   if(i >= (MAXREC * REC_PER_SEC)){
     i = (MAXREC * REC_PER_SEC) - 1;
   }
+  if (rtclk > cur_max_rt[transaction]) cur_max_rt[transaction] = rtclk;
   ++cur_hist[transaction][i];
   //printf("In: %.3f, trx: %d, Added %d\n", rtclk, transaction, i);
 }
@@ -51,7 +52,6 @@ double hist_ckp( int transaction )
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
     total += cur_hist[transaction][i]*i;
     if (cur_hist[transaction][i] > 0) {
-      cur_max_rt[transaction]= i;
     }
   }
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){

@@ -452,7 +452,8 @@ int main( int argc, char *argv[] )
   free(thd_arg);
 
   //hist_report();
-  fclose(freport_file);
+  if (freport_file != NULL)
+	  fclose(freport_file);
 
   printf("\n<Raw Results>\n");
   for ( i=0; i<5; i++ ){
@@ -575,29 +576,30 @@ void alarm_handler(int signum)
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d(%d):%.3f|%3.f, %d(%d):%.3f|%3.f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f\n",
+  printf("%4d, %d(%d):%.3f|%.3f, %d(%d):%.3f|%.3f, %d(%d):%.3f|%.3f, %d(%d):%.3f|%.3f, %d(%d):%.3f|%.3f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 ( l[0] - prev_l[0] ),
-	 rt90[0],(double)(cur_max_rt[0])/(double)(1000.0),
+	 rt90[0],(double)cur_max_rt[0],
 	 ( s[1] + l[1] - prev_s[1] - prev_l[1] ),
 	 ( l[1] - prev_l[1] ),
-	 rt90[1],(double)cur_max_rt[1]/1000.0,
+	 rt90[1],(double)cur_max_rt[1],
 	 ( s[2] + l[2] - prev_s[2] - prev_l[2] ),
 	 ( l[2] - prev_l[2] ),
-	 rt90[2],
+	 rt90[2],(double)cur_max_rt[2],
 	 ( s[3] + l[3] - prev_s[3] - prev_l[3] ),
 	 ( l[3] - prev_l[3] ),
-	 rt90[3],
+	 rt90[3],(double)cur_max_rt[3],
 	 ( s[4] + l[4] - prev_s[4] - prev_l[4] ),
 	 ( l[4] - prev_l[4] ),
-	 rt90[4]
+	 rt90[4],(double)cur_max_rt[4]
 	 );
   fflush(stdout);
 
   for( i=0; i<5; i++ ){
     prev_s[i] = s[i];
     prev_l[i] = l[i];
+    cur_max_rt[i]=0.0;
   }
 }
 
