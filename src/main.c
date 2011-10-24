@@ -66,7 +66,8 @@ int failure2_sum[5];
 int prev_s[5];
 int prev_l[5];
 
-float max_rt[5];
+double max_rt[5];
+double cur_max_rt[5];
 
 int activate_transaction;
 int counting_on;
@@ -574,14 +575,14 @@ void alarm_handler(int signum)
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f\n",
+  printf("%4d, %d(%d):%.3f|%3.f, %d(%d):%.3f|%3.f, %d(%d):%.3f, %d(%d):%.3f, %d(%d):%.3f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 ( l[0] - prev_l[0] ),
-	 rt90[0],
+	 rt90[0],(double)(cur_max_rt[0])/(double)(1000.0),
 	 ( s[1] + l[1] - prev_s[1] - prev_l[1] ),
 	 ( l[1] - prev_l[1] ),
-	 rt90[1],
+	 rt90[1],(double)cur_max_rt[1]/1000.0,
 	 ( s[2] + l[2] - prev_s[2] - prev_l[2] ),
 	 ( l[2] - prev_l[2] ),
 	 rt90[2],

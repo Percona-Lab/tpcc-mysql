@@ -10,6 +10,7 @@
 #define REC_PER_SEC 1000
 
 extern double max_rt[];
+extern double cur_max_rt[];
 
 int total_hist[5][MAXREC * REC_PER_SEC];
 int cur_hist[5][MAXREC * REC_PER_SEC];
@@ -49,6 +50,9 @@ double hist_ckp( int transaction )
   line = MAXREC * REC_PER_SEC;
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
     total += cur_hist[transaction][i]*i;
+    if (cur_hist[transaction][i] > 0) {
+      cur_max_rt[transaction]= i;
+    }
   }
   for( i=0; i<(MAXREC * REC_PER_SEC); i++){
     tmp += cur_hist[transaction][i]*i;
