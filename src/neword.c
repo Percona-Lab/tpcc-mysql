@@ -30,6 +30,8 @@ case 10: strncpy(ol_dist_info, s_dist_10, 25); break; \
 extern MYSQL **ctx;
 extern MYSQL_STMT ***stmt;
 
+extern FILE *ftrx_file;
+
 #define NNULL ((void *)0)
 
 /*
@@ -94,6 +96,9 @@ int neword( int t_num,
 	int            ol_num_seq[MAX_NUM_ITEMS];
 
 	int             proceed = 0;
+ 	struct timespec tbuf1;
+	clock_t clk1;	
+
 
 	MYSQL_STMT*   mysql_stmt;
         MYSQL_BIND    param[9];
@@ -497,6 +502,8 @@ int neword( int t_num,
 
 	/*EXEC_SQL COMMIT WORK;*/
 	if( mysql_commit(ctx[t_num]) ) goto sqlerr;
+	clk1 = clock_gettime(CLOCK_REALTIME, &tbuf1 );
+	fprintf(ftrx_file,"t_num: %d finish: %lu %lu start: %s\n",t_num, tbuf1.tv_sec, tbuf1.tv_nsec,datetime);
 
 	return (1);
 

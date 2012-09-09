@@ -35,6 +35,8 @@ char db_user[DB_STRING_MAX];
 char db_password[DB_STRING_MAX];
 char report_file[DB_STRING_MAX]="";
 FILE *freport_file=NULL;
+char trx_file[DB_STRING_MAX]="";
+FILE *ftrx_file=NULL;
 
 int num_ware;
 int num_conn;
@@ -139,7 +141,7 @@ int main( int argc, char *argv[] )
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -160,6 +162,10 @@ int main( int argc, char *argv[] )
         case 'f':
             printf ("option f with value '%s'\n", optarg);
             strncpy(report_file, optarg, DB_STRING_MAX);
+            break;
+        case 't':
+            printf ("option t with value '%s'\n", optarg);
+            strncpy(trx_file, optarg, DB_STRING_MAX);
             break;
         case 'w':
             printf ("option w with value '%s'\n", optarg);
@@ -186,7 +192,7 @@ int main( int argc, char *argv[] )
             port = atoi(optarg);
             break;
         case '?':
-    	    printf("Usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file\n");
+    	    printf("Usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file -t trx_file\n");
             exit(0);
         default:
             printf ("?? getopt returned character code 0%o ??\n", c);
@@ -278,6 +284,10 @@ int main( int argc, char *argv[] )
 
   if ( strlen(report_file) > 0 ) {
     freport_file=fopen(report_file,"w+");
+  }
+
+  if ( strlen(trx_file) > 0 ) {
+    ftrx_file=fopen(trx_file,"w+");
   }
 
 
@@ -454,6 +464,9 @@ int main( int argc, char *argv[] )
   //hist_report();
   if (freport_file != NULL)
 	  fclose(freport_file);
+
+  if (ftrx_file != NULL)
+	  fclose(ftrx_file);
 
   printf("\n<Raw Results>\n");
   for ( i=0; i<5; i++ ){
