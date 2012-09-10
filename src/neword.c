@@ -503,7 +503,9 @@ int neword( int t_num,
 	/*EXEC_SQL COMMIT WORK;*/
 	if( mysql_commit(ctx[t_num]) ) goto sqlerr;
 	clk1 = clock_gettime(CLOCK_REALTIME, &tbuf1 );
-	fprintf(ftrx_file,"t_num: %d finish: %lu %lu start: %s\n",t_num, tbuf1.tv_sec, tbuf1.tv_nsec,datetime);
+	if (ftrx_file) {
+		fprintf(ftrx_file,"t_num: %d finish: %lu %lu start: %s\n",t_num, tbuf1.tv_sec, tbuf1.tv_nsec,datetime);
+	}
 
 	return (1);
 
