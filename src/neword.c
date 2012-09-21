@@ -96,8 +96,8 @@ int neword( int t_num,
 	int            ol_num_seq[MAX_NUM_ITEMS];
 
 	int             proceed = 0;
- 	struct timespec tbuf1;
-	clock_t clk1;	
+ 	struct timespec tbuf1,tbuf_start;
+	clock_t clk1,clk_start;	
 
 
 	MYSQL_STMT*   mysql_stmt;
@@ -110,6 +110,7 @@ int neword( int t_num,
 	/*EXEC SQL CONTEXT USE :ctx[t_num];*/
 
         gettimestamp(datetime, STRFTIME_FORMAT, TIMESTAMP_LEN);
+	clk_start = clock_gettime(CLOCK_REALTIME, &tbuf_start );
 
 	proceed = 1;
 	/*EXEC_SQL SELECT c_discount, c_last, c_credit, w_tax
@@ -504,7 +505,8 @@ int neword( int t_num,
 	if( mysql_commit(ctx[t_num]) ) goto sqlerr;
 	clk1 = clock_gettime(CLOCK_REALTIME, &tbuf1 );
 	if (ftrx_file) {
-		fprintf(ftrx_file,"t_num: %d finish: %lu %lu start: %s\n",t_num, tbuf1.tv_sec, tbuf1.tv_nsec,datetime);
+		fprintf(ftrx_file,"t_num: %d finish: %lu %lu start: %lu %lu\n",t_num, tbuf1.tv_sec, tbuf1.tv_nsec,
+			tbuf_start.tv_sec, tbuf_start.tv_nsec);
 	}
 
 	return (1);
