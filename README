@@ -20,4 +20,6 @@
    * tpcc_start localhost tpcc1000 root "" 1000 32 10 10800
                 |hostname| |dbname| |user| |password| |WAREHOUSES| |CONNECTIONS| |WARMUP TIME| |BENCHMARK TIME|
 
-                
+Notes:
+- To use a port number, specify as follows (example: port 33000):
+  tpcc_load 127.0.0.1:33000 tpcc1000 root "" 1000                
