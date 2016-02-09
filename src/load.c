@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
@@ -75,7 +76,7 @@ main(argc, argv)
 	char	       db_password[DB_STRING_MAX];
         int            port= 3306;
 
-	int i;
+	int i,c;
 
 	MYSQL* resp;
 
@@ -83,50 +84,64 @@ main(argc, argv)
 	count_ware = 0;
 
 	printf("*************************************\n");
-	printf("*** ###easy### TPC-C Data Loader  ***\n");
+	printf("*** TPCC-mysql Data Loader        ***\n");
 	printf("*************************************\n");
 
-	/* Parse args */
-	if (argc != 9) {
-	    if (argc != 6) {
-		fprintf(stderr,
-	"\n usage: tpcc_load [server] [DB] [user] [pass] [warehouse]\n"
-	"      OR\n"
-	"        tpcc_load [server] [DB] [user] [pass] [warehouse] [part] [min_wh] [max_wh]\n\n"
-	"           * [part]: 1=ITEMS 2=WAREHOUSE 3=CUSTOMER 4=ORDERS\n"
-		);
-		exit(1);
-	    }
-	}else{
-	    particle_flg = 1;
-	}
+  /* Parse args */
 
-	if ( strlen(argv[1]) >= DB_STRING_MAX ) {
-	    fprintf(stderr, "\n server phrase is too long\n");
-	    exit(1);
-	}
-	if ( strlen(argv[2]) >= DB_STRING_MAX ) {
-	    fprintf(stderr, "\n DBname phrase is too long\n");
-	    exit(1);
-	}
-	if ( strlen(argv[3]) >= DB_STRING_MAX ) {
-	    fprintf(stderr, "\n user phrase is too long\n");
-	    exit(1);
-	}
-	if ( strlen(argv[4]) >= DB_STRING_MAX ) {
-	    fprintf(stderr, "\n pass phrase is too long\n");
-	    exit(1);
-	}
-	if ((count_ware = atoi(argv[5])) <= 0) {
-	    fprintf(stderr, "\n expecting positive number of warehouses\n");
-	    exit(1);
-	}
-        //strcpy(connect_string, argv[1]);
-        parse_host(connect_string, argv[1]);
-        port= parse_port(argv[1]);
-	strcpy( db_string, argv[2] );
-	strcpy( db_user, argv[3] );
-	strcpy( db_password, argv[4] );
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:l:m:n:")) != -1) {
+        switch (c) {
+        case 'h':
+            printf ("option h with value '%s'\n", optarg);
+            strncpy(connect_string, optarg, DB_STRING_MAX);
+            break;
+        case 'd':
+            printf ("option d with value '%s'\n", optarg);
+            strncpy(db_string, optarg, DB_STRING_MAX);
+            break;
+        case 'u':
+            printf ("option u with value '%s'\n", optarg);
+            strncpy(db_user, optarg, DB_STRING_MAX);
+            break;
+        case 'p':
+            printf ("option p with value '%s'\n", optarg);
+            strncpy(db_password, optarg, DB_STRING_MAX);
+            break;
+        case 'w':
+            printf ("option w with value '%s'\n", optarg);
+            count_ware = atoi(optarg);
+            break;
+        case 'l':
+            printf ("option l with value '%s'\n", optarg);
+            part_no = atoi(optarg);
+	    particle_flg = 1;
+            break;
+        case 'm':
+            printf ("option m with value '%s'\n", optarg);
+            min_ware = atoi(optarg);
+            break;
+        case 'n':
+            printf ("option n with value '%s'\n", optarg);
+            max_ware = atoi(optarg);
+            break;
+        case 'P':
+            printf ("option P with value '%s'\n", optarg);
+            port = atoi(optarg);
+            break;
+        case '?':
+    	    printf("Usage: tpcc_load -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -l part -m min_wh -n max_wh\n");
+    	    printf("* [part]: 1=ITEMS 2=WAREHOUSE 3=CUSTOMER 4=ORDERS\n");
+            exit(0);
+        default:
+            printf ("?? getopt returned character code 0%o ??\n", c);
+        }
+    }
+    if (optind < argc) {
+        printf ("non-option ARGV-elements: ");
+        while (optind < argc)
+            printf ("%s ", argv[optind++]);
+        printf ("\n");
+    }
 
 	if(strcmp(connect_string,"l")==0){
 	  is_local = 1;
@@ -134,11 +149,7 @@ main(argc, argv)
 	  is_local = 0;
 	}
 
-	if(particle_flg==1){
-	    part_no = atoi(argv[6]);
-	    min_ware = atoi(argv[7]);
-	    max_ware = atoi(argv[8]);
-	}else{
+	if(particle_flg==0){
 	    min_ware = 1;
 	    max_ware = count_ware;
 	}

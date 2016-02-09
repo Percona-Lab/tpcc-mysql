@@ -11,7 +11,7 @@
      `mysql tpcc1000 < add_fkey_idx.sql`
    * populate data
      - simple step
-       `tpcc_load 127.0.0.1:3306 tpcc1000 root "" 1000`
+       `tpcc_load -h127.0.0.1 -d tpcc1000 -u root -p "" -w 1000`
                  |hostname:port| |dbname| |user| |password| |WAREHOUSES|
        ref. tpcc_load --help for all options
      - load data in parallel 
