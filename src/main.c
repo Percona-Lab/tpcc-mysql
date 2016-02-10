@@ -30,7 +30,9 @@ MYSQL_STMT ***stmt;
 char connect_string[DB_STRING_MAX];
 
 char db_string[DB_STRING_MAX];
+char db_schemaid[DB_STRING_MAX];
 char db_host[DB_STRING_MAX];
+char db_socket[DB_STRING_MAX] = "";
 char db_user[DB_STRING_MAX];
 char db_password[DB_STRING_MAX];
 char report_file[DB_STRING_MAX]="";
@@ -49,6 +51,7 @@ char node_string[NUM_NODE_MAX][DB_STRING_MAX];
 
 int time_count;
 int PRINT_INTERVAL=10;
+int multi_schema = 0;
 
 int success[5];
 int late[5];
@@ -141,7 +144,7 @@ int main( int argc, char *argv[] )
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:m:S:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -183,6 +186,10 @@ int main( int argc, char *argv[] )
             printf ("option l with value '%s'\n", optarg);
             measure_time = atoi(optarg);
             break;
+        case 'm':
+            printf ("option m (multiple schemas) with value '%s'\n", optarg);
+            multi_schema = atoi(optarg);
+            break;
         case 'i':
             printf ("option i with value '%s'\n", optarg);
             PRINT_INTERVAL = atoi(optarg);
@@ -190,6 +197,10 @@ int main( int argc, char *argv[] )
         case 'P':
             printf ("option P with value '%s'\n", optarg);
             port = atoi(optarg);
+            break;
+        case 'S':
+            printf ("option S (socket) with value '%s'\n", optarg);
+            strncpy(db_socket, optarg, DB_STRING_MAX);
             break;
         case '?':
     	    printf("Usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file -t trx_file\n");
@@ -657,6 +668,7 @@ int thread_main (thread_arg* arg)
   int r,i;
 
   char *db_string_ptr;
+  char db_string_full[DB_STRING_MAX*2];
   MYSQL* resp;
 
   db_string_ptr = db_string;
@@ -667,12 +679,18 @@ int thread_main (thread_arg* arg)
     db_string_ptr = node_string[((num_node * t_num)/num_conn)];
   }
 
+  if (multi_schema) {
+	sprintf(db_string_full,"%s_%d",db_string, t_num % multi_schema);
+  }else {
+	sprintf(db_string_full,"%s",db_string);
+  }
+
   if(is_local==1){
     /* exec sql connect :connect_string; */
-    resp = mysql_real_connect(ctx[t_num], "localhost", db_user, db_password, db_string, port, NULL, 0);
+    resp = mysql_real_connect(ctx[t_num], "localhost", db_user, db_password, db_string_full, port, db_socket, 0);
   }else{
     /* exec sql connect :connect_string USING :db_string; */
-    resp = mysql_real_connect(ctx[t_num], connect_string, db_user, db_password, db_string, port, NULL, 0);
+    resp = mysql_real_connect(ctx[t_num], connect_string, db_user, db_password, db_string_full, port, db_socket, 0);
   }
 
   if(resp) {
