@@ -10,7 +10,7 @@ INC=		-I. `mysql_config --include`
 
 #DEFS=		-DDEBUG
 
-CFLAGS=		-w -O2 -g
+CFLAGS=		-w -O3 -g
 
 TRANSACTIONS=	neword.o payment.o ordstat.o delivery.o slev.o
 OBJS=		main.o spt_proc.o driver.o support.o sequence.o rthist.o $(TRANSACTIONS)
