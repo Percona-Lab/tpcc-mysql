@@ -39,6 +39,7 @@ extern int* retry2[];
 extern int* failure2[];
 
 extern double max_rt[];
+extern double total_rt[];
 
 extern long clk_tck;
 
@@ -131,10 +132,10 @@ static int do_neword (int t_num)
 	qty[i] = RandomNumber(1, 10);
     }
 
-    clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
+    clk1 = clock_gettime(CLOCK_MONOTONIC, &tbuf1 );
     for (i = 0; i < MAX_RETRY; i++) {
       ret = neword(t_num, w_id, d_id, c_id, ol_cnt, all_local, itemid, supware, qty);
-      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
+      clk2 = clock_gettime(CLOCK_MONOTONIC, &tbuf2 );
 
       if(ret){
 
@@ -146,6 +147,7 @@ static int do_neword (int t_num)
 
 	if(rt > max_rt[0])
 	  max_rt[0]=rt;
+	total_rt[0] += rt;
 	hist_inc(0, rt);
 	if(counting_on){
 	  if( rt < RTIME_NEWORD ){
@@ -229,16 +231,17 @@ static int do_payment (int t_num)
         c_d_id = RandomNumber(1, DIST_PER_WARE);
     }
 
-    clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
+    clk1 = clock_gettime(CLOCK_MONOTONIC, &tbuf1 );
     for (i = 0; i < MAX_RETRY; i++) {
       ret = payment(t_num, w_id, d_id, byname, c_w_id, c_d_id, c_id, c_last, h_amount);
-      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
+      clk2 = clock_gettime(CLOCK_MONOTONIC, &tbuf2 );
 
       if(ret){
 
 	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[1])
 	  max_rt[1]=rt;
+	total_rt[1] += rt;
 	hist_inc(1, rt);
 	if(counting_on){
 	  if( rt < RTIME_PAYMENT ){
@@ -301,16 +304,17 @@ static int do_ordstat (int t_num)
         byname = 0; /* select by customer id */
     }
 
-      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
+      clk1 = clock_gettime(CLOCK_MONOTONIC, &tbuf1 );
     for (i = 0; i < MAX_RETRY; i++) {
       ret = ordstat(t_num, w_id, d_id, byname, c_id, c_last);
-      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
+      clk2 = clock_gettime(CLOCK_MONOTONIC, &tbuf2 );
 
       if(ret){
 
 	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[2])
 	  max_rt[2]=rt;
+	total_rt[2] += rt;
 	hist_inc(2, rt);
 	if(counting_on){
 	  if( rt < RTIME_ORDSTAT ){
@@ -366,16 +370,17 @@ static int do_delivery (int t_num)
     }
     o_carrier_id = RandomNumber(1, 10);
 
-      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
+      clk1 = clock_gettime(CLOCK_MONOTONIC, &tbuf1 );
     for (i = 0; i < MAX_RETRY; i++) {
       ret = delivery(t_num, w_id, o_carrier_id);
-      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
+      clk2 = clock_gettime(CLOCK_MONOTONIC, &tbuf2 );
 
       if(ret){
 
 	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[3])
 	  max_rt[3]=rt;
+	total_rt[3] += rt;
 	hist_inc(3, rt );
 	if(counting_on){
 	  if( rt < RTIME_DELIVERY ){
@@ -432,16 +437,17 @@ static int do_slev (int t_num)
     d_id = RandomNumber(1, DIST_PER_WARE); 
     level = RandomNumber(10, 20); 
 
-      clk1 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf1 );
+      clk1 = clock_gettime(CLOCK_MONOTONIC, &tbuf1 );
     for (i = 0; i < MAX_RETRY; i++) {
       ret = slev(t_num, w_id, d_id, level);
-      clk2 = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &tbuf2 );
+      clk2 = clock_gettime(CLOCK_MONOTONIC, &tbuf2 );
 
       if(ret){
 
 	rt = (double)(tbuf2.tv_sec * 1000.0 + tbuf2.tv_nsec/1000000.0-tbuf1.tv_sec * 1000.0 - tbuf1.tv_nsec/1000000.0);
 	if(rt > max_rt[4])
 	  max_rt[4]=rt;
+	total_rt[4] += rt;
 	hist_inc(4, rt );
 	if(counting_on){
 	  if( rt < RTIME_SLEV ){

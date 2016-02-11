@@ -72,7 +72,10 @@ int prev_s[5];
 int prev_l[5];
 
 double max_rt[5];
+double total_rt[5];
 double cur_max_rt[5];
+
+double prev_total_rt[5];
 
 int activate_transaction;
 int counting_on;
@@ -124,8 +127,10 @@ int main( int argc, char *argv[] )
 
     prev_s[i]=0;
     prev_l[i]=0;
-
+ 
+    prev_total_rt[i] = 0.0;
     max_rt[i]=0.0;
+    total_rt[i]=0.0;
   }
 
   /* dummy initialize*/
@@ -592,15 +597,18 @@ void alarm_handler(int signum)
   int i;
   int s[5],l[5];
   double rt90[5];
+  double trt[5];
 
   for( i=0; i<5; i++ ){
     s[i] = success[i];
     l[i] = late[i];
+    trt[i] = total_rt[i];
     rt90[i] = hist_ckp(i);
   }
 
   time_count += PRINT_INTERVAL;
-  printf("%4d, %d:%.3f|%.3f, %d:%.3f|%.3f, %d:%.3f|%.3f, %d:%.3f, %d:%.3f|%.3f\n",
+//  printf("%4d, %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f)\n",
+  printf("%4d, %d:%.3f|%.3f, %d:%.3f|%.3f, %d:%.3f|%.3f, %d:%.3f|%.3f, %d:%.3f|%.3f\n",
 	 time_count,
 	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
 	 rt90[0],(double)cur_max_rt[0],
@@ -618,6 +626,7 @@ void alarm_handler(int signum)
   for( i=0; i<5; i++ ){
     prev_s[i] = s[i];
     prev_l[i] = l[i];
+    prev_total_rt[i] = trt[i];
     cur_max_rt[i]=0.0;
   }
 }
