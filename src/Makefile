@@ -13,7 +13,7 @@ INC=		-I. `mysql_config --include`
 CFLAGS=		-w -O3 -g
 
 TRANSACTIONS=	neword.o payment.o ordstat.o delivery.o slev.o
-OBJS=		main.o spt_proc.o driver.o support.o sequence.o rthist.o $(TRANSACTIONS)
+OBJS=		main.o spt_proc.o driver.o support.o sequence.o rthist.o sb_percentile.o $(TRANSACTIONS)
 
 .SUFFIXES:
 .SUFFIXES: .o .c

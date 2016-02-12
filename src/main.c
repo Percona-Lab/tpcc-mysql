@@ -19,6 +19,7 @@
 #include "spt_proc.h"
 #include "sequence.h"
 #include "rthist.h"
+#include "sb_percentile.h"
 
 /* Global SQL Variables */
 MYSQL **ctx;
@@ -76,6 +77,8 @@ double total_rt[5];
 double cur_max_rt[5];
 
 double prev_total_rt[5];
+
+sb_percentile_t local_percentile;
 
 int activate_transaction;
 int counting_on;
@@ -382,6 +385,9 @@ int main( int argc, char *argv[] )
       }
   }
 
+  if (sb_percentile_init(&local_percentile, 100000, 1.0, 1e13))
+    return NULL;
+
   /* set up threads */
 
   t = malloc( sizeof(pthread_t) * num_conn );
@@ -598,6 +604,8 @@ void alarm_handler(int signum)
   int s[5],l[5];
   double rt90[5];
   double trt[5];
+  double percentile_val;
+  double percentile_val99;
 
   for( i=0; i<5; i++ ){
     s[i] = success[i];
@@ -607,10 +615,13 @@ void alarm_handler(int signum)
   }
 
   time_count += PRINT_INTERVAL;
+  percentile_val = sb_percentile_calculate(&local_percentile, 95);
+  percentile_val99 = sb_percentile_calculate(&local_percentile, 99);
+  sb_percentile_reset(&local_percentile);
 //  printf("%4d, %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f), %d:%.3f|%.3f(%.3f)\n",
-  printf("%4d, trx: %d max_rt: %.3f, %d|%.3f, %d|%.3f, %d|%.3f, %d|%.3f\n",
+  printf("%4d, trx: %d, 95%: %.3f, 99%: %.3f, max_rt: %.3f, %d|%.3f, %d|%.3f, %d|%.3f, %d|%.3f\n",
 	 time_count,
-	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ),
+	 ( s[0] + l[0] - prev_s[0] - prev_l[0] ), percentile_val,percentile_val99,
 	 (double)cur_max_rt[0],
 	 ( s[1] + l[1] - prev_s[1] - prev_l[1] ),
 	 (double)cur_max_rt[1],

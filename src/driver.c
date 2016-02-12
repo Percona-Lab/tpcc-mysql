@@ -11,6 +11,7 @@
 #include "trans_if.h" /* prototypes for transacation interface calls */
 #include "sequence.h"
 #include "rthist.h"
+#include "sb_percentile.h"
 
 static int other_ware (int home_ware);
 static int do_neword (int t_num);
@@ -42,6 +43,7 @@ extern double max_rt[];
 extern double total_rt[];
 
 extern long clk_tck;
+extern sb_percentile_t local_percentile;
 
 #define MAX_RETRY 2000
 
@@ -54,6 +56,7 @@ extern long clk_tck;
 int driver (int t_num)
 {
     int i, j;
+    
 
     /* Actually, WaitTimes are needed... */
     while( activate_transaction ){
@@ -148,6 +151,7 @@ static int do_neword (int t_num)
 	if(rt > max_rt[0])
 	  max_rt[0]=rt;
 	total_rt[0] += rt;
+	sb_percentile_update(&local_percentile, rt);
 	hist_inc(0, rt);
 	if(counting_on){
 	  if( rt < RTIME_NEWORD ){
