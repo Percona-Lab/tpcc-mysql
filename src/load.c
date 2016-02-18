@@ -455,7 +455,7 @@ retry:
 		MakeAddress(w_street_1, w_street_2, w_city, w_state, w_zip);
 
 		w_tax = ((float) RandomNumber(10L, 20L)) / 100.0;
-		w_ytd = 300000.00
+		w_ytd = 300000.00;
 
 		if (option_debug)
 			printf("WID = %ld, Name= %16s, Tax = %5.2f\n",
