@@ -455,7 +455,7 @@ retry:
 		MakeAddress(w_street_1, w_street_2, w_city, w_state, w_zip);
 
 		w_tax = ((float) RandomNumber(10L, 20L)) / 100.0;
-		w_ytd = 3000000.00;
+		w_ytd = 300000.00
 
 		if (option_debug)
 			printf("WID = %ld, Name= %16s, Tax = %5.2f\n",
@@ -1139,7 +1139,7 @@ retry:
 				                order_line
 				                values(:o_id,:o_d_id,:o_w_id,:ol,
 						       :ol_i_id,:ol_supply_w_id, NULL,
-						       :ol_quantity,:ol_amount,:ol_dist_info);*/
+						       :ol_quantity,:tmp_float,:ol_dist_info);*/
 
 			    memset(param, 0, sizeof(MYSQL_BIND) * 9); /* initialize */
 			    param[0].buffer_type = MYSQL_TYPE_LONG;
@@ -1157,7 +1157,7 @@ retry:
 			    param[6].buffer_type = MYSQL_TYPE_LONG;
 			    param[6].buffer = &ol_quantity;
 			    param[7].buffer_type = MYSQL_TYPE_FLOAT;
-			    param[7].buffer = &ol_amount;
+			    param[7].buffer = &tmp_float;
 			    param[8].buffer_type = MYSQL_TYPE_STRING;
 			    param[8].buffer = ol_dist_info;
 			    param[8].buffer_length = strlen(ol_dist_info);
@@ -1170,7 +1170,7 @@ retry:
 				    values(:o_id,:o_d_id,:o_w_id,:ol,
 					   :ol_i_id,:ol_supply_w_id, 
 					   :timestamp,
-					   :ol_quantity,:tmp_float,:ol_dist_info);*/
+					   :ol_quantity,:ol_amount,:ol_dist_info);*/
 
 			    memset(param, 0, sizeof(MYSQL_BIND) * 10); /* initialize */
 			    param[0].buffer_type = MYSQL_TYPE_LONG;
@@ -1191,7 +1191,7 @@ retry:
 			    param[7].buffer_type = MYSQL_TYPE_LONG;
 			    param[7].buffer = &ol_quantity;
 			    param[8].buffer_type = MYSQL_TYPE_FLOAT;
-			    param[8].buffer = &tmp_float;
+			    param[8].buffer = &ol_amount;
 			    param[9].buffer_type = MYSQL_TYPE_STRING;
 			    param[9].buffer = ol_dist_info;
 			    param[9].buffer_length = strlen(ol_dist_info);

@@ -53,6 +53,7 @@ char node_string[NUM_NODE_MAX][DB_STRING_MAX];
 int time_count;
 int PRINT_INTERVAL=10;
 int multi_schema = 0;
+int multi_schema_offset = 0; 
 
 int success[5];
 int late[5];
@@ -152,7 +153,7 @@ int main( int argc, char *argv[] )
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:m:S:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:m:o:S:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -197,6 +198,10 @@ int main( int argc, char *argv[] )
         case 'm':
             printf ("option m (multiple schemas) with value '%s'\n", optarg);
             multi_schema = atoi(optarg);
+            break;
+        case 'o':
+            printf ("option o (multiple schemas offset) with value '%s'\n", optarg);
+            multi_schema_offset = atoi(optarg);
             break;
         case 'i':
             printf ("option i with value '%s'\n", optarg);
@@ -700,10 +705,12 @@ int thread_main (thread_arg* arg)
   }
 
   if (multi_schema) {
-	sprintf(db_string_full,"%s_%d",db_string, t_num % multi_schema);
+	sprintf(db_string_full,"%s_%d",db_string, (t_num % multi_schema) + multi_schema_offset);
   }else {
 	sprintf(db_string_full,"%s",db_string);
   }
+
+  printf("Using schema: %s\n", db_string_full);
 
   if(is_local==1){
     /* exec sql connect :connect_string; */
