@@ -382,7 +382,7 @@ int payment( int t_num,
 
 
 
-	c_balance += h_amount;
+	c_balance = c_balance - h_amount;
 	c_credit[2] = '\0';
 	if (strstr(c_credit, "BC")) {
 		proceed = 7;
