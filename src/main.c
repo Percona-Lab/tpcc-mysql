@@ -79,6 +79,20 @@ double cur_max_rt[5];
 
 double prev_total_rt[5];
 
+#define RTIME_NEWORD   5
+#define RTIME_PAYMENT  5
+#define RTIME_ORDSTAT  5
+#define RTIME_DELIVERY 80
+#define RTIME_SLEV     20
+
+int rt_limit[5] = {
+ RTIME_NEWORD,
+ RTIME_PAYMENT,
+ RTIME_ORDSTAT,
+ RTIME_DELIVERY,
+ RTIME_SLEV
+};
+
 sb_percentile_t local_percentile;
 
 int activate_transaction;
@@ -153,7 +167,7 @@ int main( int argc, char *argv[] )
 
   /* Parse args */
 
-    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:m:o:S:")) != -1) {
+    while ( (c = getopt(argc, argv, "h:P:d:u:p:w:c:r:l:i:f:t:m:o:S:0:1:2:3:4:")) != -1) {
         switch (c) {
         case 'h':
             printf ("option h with value '%s'\n", optarg);
@@ -214,6 +228,26 @@ int main( int argc, char *argv[] )
         case 'S':
             printf ("option S (socket) with value '%s'\n", optarg);
             strncpy(db_socket, optarg, DB_STRING_MAX);
+            break;
+        case '0':
+            printf ("option 0 (response time limit for transaction 0) '%s'\n", optarg);
+            rt_limit[0] = atoi(optarg);
+            break;
+        case '1':
+            printf ("option 1 (response time limit for transaction 1) '%s'\n", optarg);
+            rt_limit[1] = atoi(optarg);
+            break;
+        case '2':
+            printf ("option 2 (response time limit for transaction 2) '%s'\n", optarg);
+            rt_limit[2] = atoi(optarg);
+            break;
+        case '3':
+            printf ("option 3 (response time limit for transaction 3) '%s'\n", optarg);
+            rt_limit[3] = atoi(optarg);
+            break;
+        case '4':
+            printf ("option 4 (response time limit for transaction 4) '%s'\n", optarg);
+            rt_limit[4] = atoi(optarg);
             break;
         case '?':
     	    printf("Usage: tpcc_start -h server_host -P port -d database_name -u mysql_user -p mysql_password -w warehouses -c connections -r warmup_time -l running_time -i report_interval -f report_file -t trx_file\n");
@@ -497,7 +531,9 @@ int main( int argc, char *argv[] )
 
   printf("\n<Raw Results>\n");
   for ( i=0; i<5; i++ ){
-    printf("  [%d] sc:%d  lt:%d  rt:%d  fl:%d \n", i, success[i], late[i], retry[i], failure[i]);
+    printf("  [%d] sc:%d lt:%d  rt:%d  fl:%d avg_rt: %.1f (%d)\n",
+           i, success[i], late[i], retry[i], failure[i],
+           total_rt[i] / (success[i] + late[i]), rt_limit[i]);
   }
   printf(" in %d sec.\n", (measure_time / PRINT_INTERVAL) * PRINT_INTERVAL);
 
