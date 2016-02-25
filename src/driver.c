@@ -42,16 +42,12 @@ extern int* failure2[];
 extern double max_rt[];
 extern double total_rt[];
 
+extern int rt_limit[];
+
 extern long clk_tck;
 extern sb_percentile_t local_percentile;
 
 #define MAX_RETRY 2000
-
-#define RTIME_NEWORD   5
-#define RTIME_PAYMENT  5
-#define RTIME_ORDSTAT  5
-#define RTIME_DELIVERY 80
-#define RTIME_SLEV     20
 
 int driver (int t_num)
 {
@@ -154,7 +150,7 @@ static int do_neword (int t_num)
 	sb_percentile_update(&local_percentile, rt);
 	hist_inc(0, rt);
 	if(counting_on){
-	  if( rt < RTIME_NEWORD ){
+	  if( rt < rt_limit[0]){
 	    success[0]++;
 	    success2[0][t_num]++;
 	  }else{
@@ -248,7 +244,7 @@ static int do_payment (int t_num)
 	total_rt[1] += rt;
 	hist_inc(1, rt);
 	if(counting_on){
-	  if( rt < RTIME_PAYMENT ){
+	  if( rt < rt_limit[1]){
 	    success[1]++;
 	    success2[1][t_num]++;
 	  }else{
@@ -321,7 +317,7 @@ static int do_ordstat (int t_num)
 	total_rt[2] += rt;
 	hist_inc(2, rt);
 	if(counting_on){
-	  if( rt < RTIME_ORDSTAT ){
+	  if( rt < rt_limit[2]){
 	    success[2]++;
 	    success2[2][t_num]++;
 	  }else{
@@ -387,7 +383,7 @@ static int do_delivery (int t_num)
 	total_rt[3] += rt;
 	hist_inc(3, rt );
 	if(counting_on){
-	  if( rt < RTIME_DELIVERY ){
+	  if( rt < rt_limit[3]){
 	    success[3]++;
 	    success2[3][t_num]++;
 	  }else{
@@ -454,7 +450,7 @@ static int do_slev (int t_num)
 	total_rt[4] += rt;
 	hist_inc(4, rt );
 	if(counting_on){
-	  if( rt < RTIME_SLEV ){
+	  if( rt < rt_limit[4]){
 	    success[4]++;
 	    success2[4][t_num]++;
 	  }else{
