@@ -451,12 +451,12 @@ int main( int argc, char *argv[] )
     exit(1);
   }
 
-  /* EXEC SQL WHENEVER SQLERROR GOTO sqlerr; */
-
-  for( i=0; i < num_conn; i++ ){
-    ctx[i] = mysql_init(NULL);
-    if(!ctx[i]) goto sqlerr;
+  if (mysql_library_init(0, NULL, NULL)) {
+     fprintf(stderr, "could not initialize MySQL library\n");
+     exit(1);
   }
+
+  /* EXEC SQL WHENEVER SQLERROR GOTO sqlerr; */
 
   for( t_num=0; t_num < num_conn; t_num++ ){
     thd_arg[t_num].port= port;
@@ -746,7 +746,9 @@ int thread_main (thread_arg* arg)
 	sprintf(db_string_full,"%s",db_string);
   }
 
-  printf("Using schema: %s\n", db_string_full);
+  // printf("Using schema: %s\n", db_string_full);
+  
+  ctx[t_num] = mysql_init(NULL);
 
   if(is_local==1){
     /* exec sql connect :connect_string; */
