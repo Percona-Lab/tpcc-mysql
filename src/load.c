@@ -565,6 +565,24 @@ sqlerr:
 	Error(0);
 }
 
+
+void
+FillDistChar(char *dest, char *init, int i_id, int w_id)
+{
+	char buf[10] = {0};
+	strcpy(dest, init);
+
+        snprintf(buf, 10, "%d_", i_id);
+	strcpy(dest+strlen(dest),buf);
+
+        snprintf(buf, 10, "%d", w_id);
+	strcpy(dest+strlen(dest), buf);
+	
+	//printf("res=%s\n",dest);
+	return;
+}
+
+
 /*
  * ==================================================================+ |
  * ROUTINE NAME |      Stock | DESCRIPTION |      Loads the Stock table |
@@ -580,17 +598,17 @@ Stock(w_id)
 	int             s_w_id;
 	int             s_quantity;
 
-	char            s_dist_01[25];
-	char            s_dist_02[25];
-	char            s_dist_03[25];
-	char            s_dist_04[25];
-	char            s_dist_05[25];
-	char            s_dist_06[25];
-	char            s_dist_07[25];
-	char            s_dist_08[25];
-	char            s_dist_09[25];
-	char            s_dist_10[25];
-	char            s_data[51];
+	char            s_dist_01[25] = {0};
+	char            s_dist_02[25] = {0};
+	char            s_dist_03[25] = {0};
+	char            s_dist_04[25] = {0};
+	char            s_dist_05[25] = {0};
+	char            s_dist_06[25] = {0};
+	char            s_dist_07[25] = {0};
+	char            s_dist_08[25] = {0};
+	char            s_dist_09[25] = {0};
+	char            s_dist_10[25] = {0};
+	char            s_data[51] = {0};
 
 	int             sdatasiz;
 	int             orig[MAXITEMS+1];
@@ -602,6 +620,7 @@ Stock(w_id)
 
 	/* EXEC SQL WHENEVER SQLERROR GOTO sqlerr;*/
 	printf("Loading Stock Wid=%ld\n", w_id);
+        inittext();
 	s_w_id = w_id;
 
 	for (i = 0; i < MAXITEMS / 10; i++)
@@ -619,7 +638,17 @@ retry:
 		/* Generate Stock Data */
 		s_quantity = RandomNumber(10L, 100L);
 
-		s_dist_01[ MakeAlphaString(24, 24, s_dist_01) ] = 0;
+		FillDistChar(s_dist_01, "s_dist_01_", s_i_id, s_w_id);
+		FillDistChar(s_dist_02, "s_dist_02_", s_i_id, s_w_id);
+		FillDistChar(s_dist_03, "s_dist_03_", s_i_id, s_w_id);
+		FillDistChar(s_dist_04, "s_dist_04_", s_i_id, s_w_id);
+		FillDistChar(s_dist_05, "s_dist_05_", s_i_id, s_w_id);
+		FillDistChar(s_dist_06, "s_dist_06_", s_i_id, s_w_id);
+		FillDistChar(s_dist_07, "s_dist_07_", s_i_id, s_w_id);
+		FillDistChar(s_dist_08, "s_dist_08_", s_i_id, s_w_id);
+		FillDistChar(s_dist_09, "s_dist_09_", s_i_id, s_w_id);
+		FillDistChar(s_dist_10, "s_dist_10_", s_i_id, s_w_id);
+		/*
 		s_dist_02[ MakeAlphaString(24, 24, s_dist_02) ] = 0;
 		s_dist_03[ MakeAlphaString(24, 24, s_dist_03) ] = 0;
 		s_dist_04[ MakeAlphaString(24, 24, s_dist_04) ] = 0;
@@ -629,8 +658,10 @@ retry:
 		s_dist_08[ MakeAlphaString(24, 24, s_dist_08) ] = 0;
 		s_dist_09[ MakeAlphaString(24, 24, s_dist_09) ] = 0;
 		s_dist_10[ MakeAlphaString(24, 24, s_dist_10) ] = 0;
-		sdatasiz = MakeAlphaString(26, 50, s_data);
-		s_data[sdatasiz] = 0;
+		*/
+		dbg_text(&s_data[0], 26, 50, 31);
+		//sdatasiz = MakeAlphaString(26, 50, s_data);
+		//s_data[sdatasiz] = 0;
 
 		if (orig[s_i_id]) {
 			pos = RandomNumber(0L, sdatasiz - 8);
@@ -839,11 +870,11 @@ Customer(d_id, w_id)
 	int             c_credit_lim;
 	float           c_discount;
 	float           c_balance;
-	char            c_data[501];
+	char            c_data[501] = {0};
 
 	float           h_amount;
 
-	char            h_data[25];
+	char            h_data[25] = {0};
     int             retried = 0;
 
 	MYSQL_BIND    param[18];
@@ -851,6 +882,7 @@ Customer(d_id, w_id)
 	/*EXEC SQL WHENEVER SQLERROR GOTO sqlerr;*/
 
 	printf("Loading Customer for DID=%ld, WID=%ld\n", d_id, w_id);
+	inittext();
 
 retry:
     if (retried)
@@ -887,7 +919,8 @@ retry:
 		c_discount = ((float) RandomNumber(0L, 50L)) / 100.0;
 		c_balance = -10.0;
 
-		c_data[ MakeAlphaString(300, 500, c_data) ] = 0;
+		//c_data[ MakeAlphaString(300, 500, c_data) ] = 0;
+		dbg_text(&c_data[0], 300, 500, 32);
 
 		/*EXEC SQL INSERT INTO
 		                customer
@@ -1026,7 +1059,7 @@ Orders(d_id, w_id)
 	int             ol_supply_w_id;
 	int             ol_quantity;
 	float           ol_amount;
-	char            ol_dist_info[25];
+	char            ol_dist_info[25] = {0};
 	float           i_price;
 	float           c_discount;
 	float           tmp_float;
@@ -1130,7 +1163,9 @@ retry:
 			ol_quantity = 5;
 			ol_amount = 0.0;
 
-			ol_dist_info[ MakeAlphaString(24, 24, ol_dist_info) ] = 0;
+			//ol_dist_info[ MakeAlphaString(24, 24, ol_dist_info) ] = 0;
+			memset(ol_dist_info,0,25);
+			FillDistChar(ol_dist_info, "s_dist_XX_",ol_i_id, o_w_id);
 
 			tmp_float = (float) (RandomNumber(10L, 10000L)) / 100.0;
 

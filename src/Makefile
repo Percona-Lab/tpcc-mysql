@@ -24,7 +24,7 @@ OBJS=		main.o spt_proc.o driver.o support.o sequence.o rthist.o sb_percentile.o 
 all: ../tpcc_load ../tpcc_start
 
 ../tpcc_load : load.o support.o
-	$(CC) load.o support.o $(LIBS) -o ../tpcc_load
+	$(CC) load.o support.o -DTEXT_TEST -DLINUX -DTPCH dbgen/text.c dbgen/bm_utils.c dbgen/rng64.c dbgen/rnd.c dbgen/speed_seed.c dbgen/permute.c dbgen/build.c $(LIBS) -o ../tpcc_load
 
 ../tpcc_start : $(OBJS)
 	$(CC) $(OBJS) $(LIBS) -o ../tpcc_start
