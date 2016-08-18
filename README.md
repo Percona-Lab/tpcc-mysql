@@ -1,5 +1,5 @@
 1. Build binaries
-   * `cd scr ; make`
+   * `cd src ; make`
    ( you should have mysql_config available in $PATH)
 
 2. Load data
