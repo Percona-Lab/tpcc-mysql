@@ -1,5 +1,5 @@
 1. Build binaries
-   * `cd scr ; make`
+   * `cd src ; make`
    ( you should have mysql_config available in $PATH)
 
 2. Load data
@@ -17,7 +17,7 @@
      - load data in parallel 
        check load.sh script
 
-3. start benchmark
+3. Start benchmark
    * `./tpcc_start -h127.0.0.1 -P3306 -dtpcc1000 -uroot -w1000 -c32 -r10 -l10800`
    * |hostname| |port| |dbname| |user| |WAREHOUSES| |CONNECTIONS| |WARMUP TIME| |BENCHMARK TIME|
    * ref. tpcc_start --help for all options 
