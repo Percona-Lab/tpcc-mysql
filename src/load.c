@@ -42,7 +42,7 @@ int             i;
 int             option_debug = 0;	/* 1 if generating debug output    */
 int             is_local = 1;           /* "1" mean local */
 
-#define DB_STRING_MAX 51
+#define DB_STRING_MAX 128
 
 #include "parse_port.h"
 
